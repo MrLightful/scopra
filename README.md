@@ -14,7 +14,7 @@ bun add protec
 ## Usage
 
 ```ts
-import { allow, Policy, PolicyEngine, deny } from "protec";
+import { Policy, PolicyEngine, deny } from "protec";
 
 const noSecrets = new Policy({
   id: "no-secrets",
@@ -24,16 +24,8 @@ const noSecrets = new Policy({
   action: deny("Do not share secrets."),
 });
 
-const approvedTool = new Policy({
-  id: "approved-tool",
-  name: "Approved tool",
-  description: "Marks approved tool usage.",
-  instruction: "Allow approved tool invocations.",
-  action: allow(),
-});
-
 const engine = new PolicyEngine({
-  policies: [noSecrets, approvedTool],
+  policies: [noSecrets],
   evaluator: async ({ request, policies }) => {
     // Bring your own evaluator: an LLM, rules engine, internal service, or test double.
     return policies.map((policy) => ({

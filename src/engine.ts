@@ -39,8 +39,8 @@ export class PolicyEngine {
   /**
    * Evaluates a request and returns a decision.
    *
-   * Failed findings only deny the request when they match a policy with a deny
-   * action. Failed allow policies are kept in the findings but do not block.
+   * Failed findings deny the request when they match a configured policy.
+   * Findings for unknown policies are kept but do not block.
    */
   async evaluate(request: EvaluationRequest): Promise<PolicyDecision> {
     const findings = await this.evaluator({
@@ -85,10 +85,6 @@ export class PolicyEngine {
     const policy = this.policies.find((candidate) => candidate.id === finding.policyId);
 
     if (policy === undefined) {
-      return undefined;
-    }
-
-    if (policy.action.type !== "deny") {
       return undefined;
     }
 

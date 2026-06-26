@@ -1,12 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-  allow,
-  deny,
-  Policy,
-  PolicyEngine,
-  type PolicyEvaluator,
-  type PolicyOptions,
-} from "./index";
+import { deny, Policy, PolicyEngine, type PolicyEvaluator, type PolicyOptions } from "./index";
 
 const noSecretsPolicy: PolicyOptions = {
   id: "no-secrets",
@@ -24,14 +17,6 @@ const stayInScopePolicy: PolicyOptions = {
   action: deny("That request is outside this assistant's scope."),
 };
 
-const approvedToolPolicy: PolicyOptions = {
-  id: "approved-tool",
-  name: "Approved tool",
-  description: "Marks an approved tool invocation.",
-  instruction: "Allow approved tool usage.",
-  action: allow(),
-};
-
 describe("Policy", () => {
   test("creates a policy from options", () => {
     const policy = new Policy(noSecretsPolicy);
@@ -45,14 +30,6 @@ describe("Policy", () => {
         type: "deny",
         message: "Do not share secrets.",
       },
-    });
-  });
-
-  test("creates a policy with an allow action", () => {
-    const policy = new Policy(approvedToolPolicy);
-
-    expect(policy.action).toEqual({
-      type: "allow",
     });
   });
 });
@@ -208,16 +185,16 @@ describe("PolicyEngine", () => {
     ]);
   });
 
-  test("does not deny when a failed finding belongs to an allow action", async () => {
+  test("does not deny when a failed finding belongs to an unknown policy", async () => {
     const engine = new PolicyEngine({
       evaluator: () => [
         {
-          policyId: "approved-tool",
+          policyId: "unknown-policy",
           passed: false,
-          reason: "The tool was not on the approved allowlist.",
+          reason: "The finding did not match a configured policy.",
         },
       ],
-      policies: [approvedToolPolicy],
+      policies: [stayInScopePolicy],
     });
 
     const decision = await engine.evaluate({
@@ -239,9 +216,9 @@ describe("PolicyEngine", () => {
       },
       findings: [
         {
-          policyId: "approved-tool",
+          policyId: "unknown-policy",
           passed: false,
-          reason: "The tool was not on the approved allowlist.",
+          reason: "The finding did not match a configured policy.",
         },
       ],
       violations: [],

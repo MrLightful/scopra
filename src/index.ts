@@ -1,5 +1,5 @@
-export type { AllowPolicyAction, DenyPolicyAction, PolicyAction } from "./actions";
-export { allow, deny } from "./actions";
+export type { DenyPolicyAction, PolicyAction } from "./actions";
+export { deny } from "./actions";
 export type { PolicyEngineConfig } from "./engine";
 export { PolicyEngine } from "./engine";
 export type {
