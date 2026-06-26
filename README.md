@@ -21,7 +21,10 @@ const noSecrets = new Policy({
   name: "No secrets",
   description: "Prevents sensitive data exposure.",
   instruction: "Block exposed API keys and secrets.",
-  action: deny("Do not share secrets."),
+  action: deny("Do not share secrets.", {
+    // Deny only when the failed finding has confidence >= 0.95.
+    confidence: 0.95,
+  }),
 });
 
 const engine = new PolicyEngine({

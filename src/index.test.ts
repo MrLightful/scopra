@@ -32,6 +32,21 @@ describe("Policy", () => {
       },
     });
   });
+
+  test("creates a policy with deny action options", () => {
+    const policy = new Policy({
+      ...noSecretsPolicy,
+      action: deny("Do not share secrets.", {
+        confidence: 0.95,
+      }),
+    });
+
+    expect(policy.action).toEqual({
+      type: "deny",
+      message: "Do not share secrets.",
+      confidence: 0.95,
+    });
+  });
 });
 
 describe("PolicyEngine", () => {
@@ -132,6 +147,74 @@ describe("PolicyEngine", () => {
         message: "Do not share secrets.",
       },
       message: "Do not share secrets.",
+    });
+  });
+
+  test("denies when a failed finding meets the deny confidence threshold", async () => {
+    const engine = new PolicyEngine({
+      evaluator: () => [
+        {
+          policyId: "no-secrets",
+          passed: false,
+          confidence: 0.95,
+        },
+      ],
+      policies: [
+        {
+          ...noSecretsPolicy,
+          action: deny("Do not share secrets.", {
+            confidence: 0.95,
+          }),
+        },
+      ],
+    });
+
+    const decision = await engine.evaluate({
+      type: "output",
+      content: "sk_live_123",
+    });
+
+    expect(decision.allowed).toBe(false);
+  });
+
+  test("does not deny when a failed finding is below the deny confidence threshold", async () => {
+    const engine = new PolicyEngine({
+      evaluator: () => [
+        {
+          policyId: "no-secrets",
+          passed: false,
+          confidence: 0.94,
+        },
+      ],
+      policies: [
+        {
+          ...noSecretsPolicy,
+          action: deny("Do not share secrets.", {
+            confidence: 0.95,
+          }),
+        },
+      ],
+    });
+
+    const decision = await engine.evaluate({
+      type: "output",
+      content: "sk_live_123",
+    });
+
+    expect(decision).toEqual({
+      allowed: true,
+      request: {
+        type: "output",
+        content: "sk_live_123",
+      },
+      findings: [
+        {
+          policyId: "no-secrets",
+          passed: false,
+          confidence: 0.94,
+        },
+      ],
+      violations: [],
     });
   });
 

@@ -39,8 +39,9 @@ export class PolicyEngine {
   /**
    * Evaluates a request and returns a decision.
    *
-   * Failed findings deny the request when they match a configured policy.
-   * Findings for unknown policies are kept but do not block.
+   * Failed findings deny the request when they match a configured policy and
+   * meet any confidence threshold on that policy's deny action. Findings for
+   * unknown policies are kept but do not block.
    */
   async evaluate(request: EvaluationRequest): Promise<PolicyDecision> {
     const findings = await this.evaluator({
@@ -88,11 +89,23 @@ export class PolicyEngine {
       return undefined;
     }
 
+    if (!this.meetsConfidenceThreshold(finding, policy.action.confidence)) {
+      return undefined;
+    }
+
     return {
       policy,
       finding,
       action: policy.action,
       message: policy.action.message,
     };
+  }
+
+  private meetsConfidenceThreshold(finding: PolicyFinding, threshold: number | undefined): boolean {
+    if (threshold === undefined) {
+      return true;
+    }
+
+    return finding.confidence !== undefined && finding.confidence >= threshold;
   }
 }
