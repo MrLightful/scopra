@@ -7,15 +7,28 @@ import type {
 } from "./evaluation";
 import { Policy, type PolicyOptions } from "./policy";
 
+/**
+ * Configuration for creating a policy engine.
+ */
 export type PolicyEngineConfig = {
+  /** Evaluator used to produce findings for each evaluation request. */
   readonly evaluator: PolicyEvaluator;
+  /** Policies to evaluate, provided as instances or plain configuration. */
   readonly policies: readonly (Policy | PolicyOptions)[];
 };
 
+/**
+ * Evaluates requests against configured policies and returns allow or deny decisions.
+ */
 export class PolicyEngine {
+  /** Evaluator used to produce findings for each evaluation request. */
   readonly evaluator: PolicyEvaluator;
+  /** Policies normalized to {@link Policy} instances. */
   readonly policies: readonly Policy[];
 
+  /**
+   * Creates a policy engine and normalizes plain policy options to {@link Policy} instances.
+   */
   constructor(config: PolicyEngineConfig) {
     this.evaluator = config.evaluator;
     this.policies = config.policies.map((policy) =>
@@ -23,6 +36,12 @@ export class PolicyEngine {
     );
   }
 
+  /**
+   * Evaluates a request and returns a decision.
+   *
+   * Failed findings only deny the request when they match a policy with a deny
+   * action. Failed allow policies are kept in the findings but do not block.
+   */
   async evaluate(request: EvaluationRequest): Promise<PolicyDecision> {
     const findings = await this.evaluator({
       request,
