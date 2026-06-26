@@ -1,7 +1,7 @@
 {
   "name": "protec",
   "version": "0.1.0",
-  "description": "TypeScript SDK core for Protec.",
+  "description": "Developer-first TypeScript policy enforcement for AI applications.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -27,6 +27,9 @@
     "prepublishOnly": "bun run check && bun run build"
   },
   "keywords": [
+    "ai",
+    "policy",
+    "security",
     "sdk",
     "typescript"
   ],
