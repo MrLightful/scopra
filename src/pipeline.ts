@@ -8,9 +8,9 @@ import type {
 import { Policy, type PolicyOptions } from "./policy";
 
 /**
- * Configuration for creating a policy engine.
+ * Configuration for creating a policy pipeline.
  */
-export type PolicyEngineConfig = {
+export type PolicyPipelineConfig = {
   /** Evaluator used to produce findings for each evaluation request. */
   readonly evaluator: PolicyEvaluator;
   /** Policies to evaluate, provided as instances or plain configuration. */
@@ -20,16 +20,16 @@ export type PolicyEngineConfig = {
 /**
  * Evaluates requests against configured policies and returns allow or deny decisions.
  */
-export class PolicyEngine {
+export class PolicyPipeline {
   /** Evaluator used to produce findings for each evaluation request. */
   readonly evaluator: PolicyEvaluator;
   /** Policies normalized to {@link Policy} instances. */
   readonly policies: readonly Policy[];
 
   /**
-   * Creates a policy engine and normalizes plain policy options to {@link Policy} instances.
+   * Creates a policy pipeline and normalizes plain policy options to {@link Policy} instances.
    */
-  constructor(config: PolicyEngineConfig) {
+  constructor(config: PolicyPipelineConfig) {
     this.evaluator = config.evaluator;
     this.policies = config.policies.map((policy) =>
       policy instanceof Policy ? policy : new Policy(policy),

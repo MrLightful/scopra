@@ -17,7 +17,7 @@ export type PolicyOptions = {
 };
 
 /**
- * Policy definition evaluated by a {@link PolicyEngine}.
+ * Policy definition evaluated by a {@link PolicyPipeline}.
  */
 export class Policy {
   /** Stable identifier used to match evaluator findings to this policy. */

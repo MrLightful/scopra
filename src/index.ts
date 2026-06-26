@@ -1,7 +1,5 @@
 export type { DenyPolicyAction, DenyPolicyActionOptions, PolicyAction } from "./actions";
 export { deny } from "./actions";
-export type { PolicyEngineConfig } from "./engine";
-export { PolicyEngine } from "./engine";
 export type {
   EvaluationRequest,
   InputEvaluationRequest,
@@ -13,5 +11,7 @@ export type {
   PolicyViolation,
   ToolEvaluationRequest,
 } from "./evaluation";
+export type { PolicyPipelineConfig } from "./pipeline";
+export { PolicyPipeline } from "./pipeline";
 export type { PolicyOptions } from "./policy";
 export { Policy } from "./policy";

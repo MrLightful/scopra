@@ -14,7 +14,7 @@ bun add protec
 ## Usage
 
 ```ts
-import { Policy, PolicyEngine, deny } from "protec";
+import { Policy, PolicyPipeline, deny } from "protec";
 
 const noSecrets = new Policy({
   id: "no-secrets",
@@ -27,7 +27,7 @@ const noSecrets = new Policy({
   }),
 });
 
-const engine = new PolicyEngine({
+const pipeline = new PolicyPipeline({
   policies: [noSecrets],
   evaluator: async ({ request, policies }) => {
     // Bring your own evaluator: an LLM, rules engine, internal service, or test double.
@@ -40,7 +40,7 @@ const engine = new PolicyEngine({
   },
 });
 
-const decision = await engine.evaluate({
+const decision = await pipeline.evaluate({
   type: "output",
   content: "Here is the answer.",
 });
@@ -53,17 +53,17 @@ if (!decision.allowed) {
 ## Evaluation Requests
 
 ```ts
-await engine.evaluate({
+await pipeline.evaluate({
   type: "input",
   content: "Can you help me write a test?",
 });
 
-await engine.evaluate({
+await pipeline.evaluate({
   type: "output",
   content: "Here is a safe response.",
 });
 
-await engine.evaluate({
+await pipeline.evaluate({
   type: "tool",
   name: "sendEmail",
   arguments: {

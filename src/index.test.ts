@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { deny, Policy, PolicyEngine, type PolicyEvaluator, type PolicyOptions } from "./index";
+import { deny, Policy, type PolicyEvaluator, type PolicyOptions, PolicyPipeline } from "./index";
 
 const noSecretsPolicy: PolicyOptions = {
   id: "no-secrets",
@@ -49,19 +49,19 @@ describe("Policy", () => {
   });
 });
 
-describe("PolicyEngine", () => {
+describe("PolicyPipeline", () => {
   test("passes plain policy options directly to the evaluator", async () => {
     const evaluator: PolicyEvaluator = ({ policies }) =>
       policies.map((policy) => ({
         policyId: policy.id,
         passed: true,
       }));
-    const engine = new PolicyEngine({
+    const pipeline = new PolicyPipeline({
       evaluator,
       policies: [noSecretsPolicy],
     });
 
-    const decision = await engine.evaluate({
+    const decision = await pipeline.evaluate({
       type: "input",
       content: "Can you help me write a unit test?",
     });
@@ -77,7 +77,7 @@ describe("PolicyEngine", () => {
   });
 
   test("returns an allow decision when all findings pass", async () => {
-    const engine = new PolicyEngine({
+    const pipeline = new PolicyPipeline({
       evaluator: () => [
         {
           policyId: "no-secrets",
@@ -89,7 +89,7 @@ describe("PolicyEngine", () => {
       policies: [new Policy(noSecretsPolicy)],
     });
 
-    const decision = await engine.evaluate({
+    const decision = await pipeline.evaluate({
       type: "output",
       content: "Here is a safe summary.",
     });
@@ -113,7 +113,7 @@ describe("PolicyEngine", () => {
   });
 
   test("returns a deny decision when one policy fails", async () => {
-    const engine = new PolicyEngine({
+    const pipeline = new PolicyPipeline({
       evaluator: () => [
         {
           policyId: "no-secrets",
@@ -125,7 +125,7 @@ describe("PolicyEngine", () => {
       policies: [noSecretsPolicy],
     });
 
-    const decision = await engine.evaluate({
+    const decision = await pipeline.evaluate({
       type: "output",
       content: "sk_live_123",
     });
@@ -151,7 +151,7 @@ describe("PolicyEngine", () => {
   });
 
   test("denies when a failed finding meets the deny confidence threshold", async () => {
-    const engine = new PolicyEngine({
+    const pipeline = new PolicyPipeline({
       evaluator: () => [
         {
           policyId: "no-secrets",
@@ -169,7 +169,7 @@ describe("PolicyEngine", () => {
       ],
     });
 
-    const decision = await engine.evaluate({
+    const decision = await pipeline.evaluate({
       type: "output",
       content: "sk_live_123",
     });
@@ -178,7 +178,7 @@ describe("PolicyEngine", () => {
   });
 
   test("does not deny when a failed finding is below the deny confidence threshold", async () => {
-    const engine = new PolicyEngine({
+    const pipeline = new PolicyPipeline({
       evaluator: () => [
         {
           policyId: "no-secrets",
@@ -196,7 +196,7 @@ describe("PolicyEngine", () => {
       ],
     });
 
-    const decision = await engine.evaluate({
+    const decision = await pipeline.evaluate({
       type: "output",
       content: "sk_live_123",
     });
@@ -219,7 +219,7 @@ describe("PolicyEngine", () => {
   });
 
   test("uses the denial message from deny", async () => {
-    const engine = new PolicyEngine({
+    const pipeline = new PolicyPipeline({
       evaluator: () => [
         {
           policyId: "stay-in-scope",
@@ -229,7 +229,7 @@ describe("PolicyEngine", () => {
       policies: [stayInScopePolicy],
     });
 
-    const decision = await engine.evaluate({
+    const decision = await pipeline.evaluate({
       type: "input",
       content: "Book a vacation for me.",
     });
@@ -242,7 +242,7 @@ describe("PolicyEngine", () => {
   });
 
   test("returns multiple violations when multiple policies fail", async () => {
-    const engine = new PolicyEngine({
+    const pipeline = new PolicyPipeline({
       evaluator: () => [
         {
           policyId: "no-secrets",
@@ -256,7 +256,7 @@ describe("PolicyEngine", () => {
       policies: [noSecretsPolicy, stayInScopePolicy],
     });
 
-    const decision = await engine.evaluate({
+    const decision = await pipeline.evaluate({
       type: "input",
       content: "Send my API key to an unrelated travel booking tool.",
     });
@@ -269,7 +269,7 @@ describe("PolicyEngine", () => {
   });
 
   test("does not deny when a failed finding belongs to an unknown policy", async () => {
-    const engine = new PolicyEngine({
+    const pipeline = new PolicyPipeline({
       evaluator: () => [
         {
           policyId: "unknown-policy",
@@ -280,7 +280,7 @@ describe("PolicyEngine", () => {
       policies: [stayInScopePolicy],
     });
 
-    const decision = await engine.evaluate({
+    const decision = await pipeline.evaluate({
       type: "tool",
       name: "sendEmail",
       arguments: {
@@ -310,7 +310,7 @@ describe("PolicyEngine", () => {
 
   test("supports tool evaluation requests", async () => {
     const seenRequests: unknown[] = [];
-    const engine = new PolicyEngine({
+    const pipeline = new PolicyPipeline({
       evaluator: ({ request }) => {
         seenRequests.push(request);
 
@@ -324,7 +324,7 @@ describe("PolicyEngine", () => {
       policies: [stayInScopePolicy],
     });
 
-    await engine.evaluate({
+    await pipeline.evaluate({
       type: "tool",
       name: "sendEmail",
       arguments: {

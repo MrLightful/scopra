@@ -34,7 +34,7 @@ export type ToolEvaluationRequest = {
 };
 
 /**
- * Request shape accepted by policy evaluators and policy engines.
+ * Request shape accepted by policy evaluators and policy pipelines.
  */
 export type EvaluationRequest =
   | InputEvaluationRequest
