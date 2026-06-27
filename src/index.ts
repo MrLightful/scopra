@@ -6,8 +6,10 @@ export type {
   EscalatePolicyActionOptions,
   EscalatePolicyActionSingleOptions,
   PolicyAction,
+  WhenPolicyAction,
+  WhenPolicyActionCase,
 } from "./actions";
-export { deny, escalate } from "./actions";
+export { deny, escalate, when } from "./actions";
 export type {
   EvaluationRequest,
   InputEvaluationRequest,

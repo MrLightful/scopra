@@ -8,6 +8,7 @@ import {
   type PolicyEvaluator,
   type PolicyOptions,
   PolicyPipeline,
+  when,
 } from "./index";
 
 const noSecretsPolicy: PolicyOptions = {
@@ -101,6 +102,10 @@ describe("Policy", () => {
         policies: [],
       }),
     ).toThrow("at least one policy");
+  });
+
+  test("rejects conditional actions without cases", () => {
+    expect(() => when()).toThrow("at least one case");
   });
 });
 
@@ -504,6 +509,268 @@ describe("PolicyPipeline", () => {
           policyId: "possible-secrets",
           passed: false,
           confidence: 0.39,
+        },
+      ],
+      violations: [],
+      escalations: [],
+    });
+  });
+
+  test("routes high confidence findings to deny", async () => {
+    const pipeline = new PolicyPipeline({
+      evaluator: () => [
+        {
+          policyId: "possible-secrets",
+          passed: false,
+          confidence: 0.97,
+        },
+      ],
+      policies: [
+        {
+          id: "possible-secrets",
+          name: "Possible secrets",
+          instruction: "Choose a response by finding confidence.",
+          action: when(
+            {
+              confidence: 0.95,
+              action: deny("Do not share secrets."),
+            },
+            {
+              confidence: 0.4,
+              action: escalate({
+                policy: highRiskSecretsPolicy,
+              }),
+            },
+          ),
+        },
+      ],
+    });
+
+    const decision = await pipeline.evaluate({
+      type: "output",
+      content: "sk_live_123",
+    });
+
+    expect(decision.allowed).toBe(false);
+    expect(decision.violations).toHaveLength(1);
+    expect(decision.escalations).toEqual([]);
+
+    if (!decision.allowed) {
+      expect(decision.message).toBe("Do not share secrets.");
+    }
+  });
+
+  test("routes mid confidence findings to escalation", async () => {
+    const seenPolicies: string[][] = [];
+    const pipeline = new PolicyPipeline({
+      evaluator: ({ policies }) => {
+        seenPolicies.push(policies.map((policy) => policy.id));
+
+        if (policies[0]?.id === "possible-secrets") {
+          return [
+            {
+              policyId: "possible-secrets",
+              passed: false,
+              confidence: 0.7,
+            },
+          ];
+        }
+
+        return [
+          {
+            policyId: "high-risk-secrets",
+            passed: false,
+            confidence: 0.96,
+          },
+        ];
+      },
+      policies: [
+        {
+          id: "possible-secrets",
+          name: "Possible secrets",
+          instruction: "Choose a response by finding confidence.",
+          action: when(
+            {
+              confidence: 0.95,
+              action: deny("Do not share secrets."),
+            },
+            {
+              confidence: 0.4,
+              action: escalate({
+                policy: highRiskSecretsPolicy,
+              }),
+            },
+          ),
+        },
+      ],
+    });
+
+    const decision = await pipeline.evaluate({
+      type: "output",
+      content: "sk_live_123",
+    });
+
+    expect(seenPolicies).toEqual([["possible-secrets"], ["high-risk-secrets"]]);
+    expect(decision.allowed).toBe(false);
+    expect(decision.violations.map((violation) => violation.policy.id)).toEqual([
+      "high-risk-secrets",
+    ]);
+    expect(decision.escalations).toHaveLength(1);
+  });
+
+  test("allows low confidence findings when no conditional action matches", async () => {
+    const seenPolicies: string[][] = [];
+    const pipeline = new PolicyPipeline({
+      evaluator: ({ policies }) => {
+        seenPolicies.push(policies.map((policy) => policy.id));
+
+        return [
+          {
+            policyId: "possible-secrets",
+            passed: false,
+            confidence: 0.2,
+          },
+        ];
+      },
+      policies: [
+        {
+          id: "possible-secrets",
+          name: "Possible secrets",
+          instruction: "Choose a response by finding confidence.",
+          action: when(
+            {
+              confidence: 0.95,
+              action: deny("Do not share secrets."),
+            },
+            {
+              confidence: 0.4,
+              action: escalate({
+                policy: highRiskSecretsPolicy,
+              }),
+            },
+          ),
+        },
+      ],
+    });
+
+    const decision = await pipeline.evaluate({
+      type: "output",
+      content: "possible secret",
+    });
+
+    expect(seenPolicies).toEqual([["possible-secrets"]]);
+    expect(decision).toEqual({
+      allowed: true,
+      request: {
+        type: "output",
+        content: "possible secret",
+      },
+      findings: [
+        {
+          policyId: "possible-secrets",
+          passed: false,
+          confidence: 0.2,
+        },
+      ],
+      violations: [],
+      escalations: [],
+    });
+  });
+
+  test("uses the first matching conditional action", async () => {
+    const seenPolicies: string[][] = [];
+    const pipeline = new PolicyPipeline({
+      evaluator: ({ policies }) => {
+        seenPolicies.push(policies.map((policy) => policy.id));
+
+        if (policies[0]?.id === "possible-secrets") {
+          return [
+            {
+              policyId: "possible-secrets",
+              passed: false,
+              confidence: 0.98,
+            },
+          ];
+        }
+
+        return [
+          {
+            policyId: "high-risk-secrets",
+            passed: false,
+            confidence: 0.98,
+          },
+        ];
+      },
+      policies: [
+        {
+          id: "possible-secrets",
+          name: "Possible secrets",
+          instruction: "Choose a response by finding confidence.",
+          action: when(
+            {
+              confidence: 0.4,
+              action: escalate({
+                policy: highRiskSecretsPolicy,
+              }),
+            },
+            {
+              confidence: 0.95,
+              action: deny("Do not share secrets."),
+            },
+          ),
+        },
+      ],
+    });
+
+    const decision = await pipeline.evaluate({
+      type: "output",
+      content: "sk_live_123",
+    });
+
+    expect(seenPolicies).toEqual([["possible-secrets"], ["high-risk-secrets"]]);
+    expect(decision.allowed).toBe(false);
+    expect(decision.escalations).toHaveLength(1);
+    expect(decision.violations.map((violation) => violation.policy.id)).toEqual([
+      "high-risk-secrets",
+    ]);
+  });
+
+  test("does not match conditional actions when confidence is missing", async () => {
+    const pipeline = new PolicyPipeline({
+      evaluator: () => [
+        {
+          policyId: "possible-secrets",
+          passed: false,
+        },
+      ],
+      policies: [
+        {
+          id: "possible-secrets",
+          name: "Possible secrets",
+          instruction: "Choose a response by finding confidence.",
+          action: when({
+            confidence: 0.4,
+            action: deny("Do not share secrets."),
+          }),
+        },
+      ],
+    });
+
+    const decision = await pipeline.evaluate({
+      type: "output",
+      content: "possible secret",
+    });
+
+    expect(decision).toEqual({
+      allowed: true,
+      request: {
+        type: "output",
+        content: "possible secret",
+      },
+      findings: [
+        {
+          policyId: "possible-secrets",
+          passed: false,
         },
       ],
       violations: [],

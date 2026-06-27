@@ -25,9 +25,29 @@ export type EscalatePolicyAction = {
 };
 
 /**
+ * One confidence-gated branch in a conditional policy action.
+ */
+export type WhenPolicyActionCase = {
+  /** Minimum finding confidence required to use this action. */
+  readonly confidence: number;
+  /** Action applied when this case matches. */
+  readonly action: DenyPolicyAction | EscalatePolicyAction;
+};
+
+/**
+ * Selects the first matching action for a failed finding by confidence.
+ */
+export type WhenPolicyAction = {
+  /** Identifies this action as confidence-based routing. */
+  readonly type: "when";
+  /** Ordered action cases evaluated when the associated policy fails. */
+  readonly cases: readonly WhenPolicyActionCase[];
+};
+
+/**
  * Action applied when a policy finding fails.
  */
-export type PolicyAction = DenyPolicyAction | EscalatePolicyAction;
+export type PolicyAction = DenyPolicyAction | EscalatePolicyAction | WhenPolicyAction;
 
 /**
  * Options for creating a deny action.
@@ -106,5 +126,22 @@ export function escalate(options: EscalatePolicyActionOptions): EscalatePolicyAc
     type: "escalate",
     policies,
     ...(options.confidence === undefined ? {} : { confidence: options.confidence }),
+  };
+}
+
+/**
+ * Creates a confidence-based action router.
+ *
+ * Cases are evaluated in declaration order. If no case matches, the failed
+ * finding does not produce a violation or escalation.
+ */
+export function when(...cases: readonly WhenPolicyActionCase[]): WhenPolicyAction {
+  if (cases.length === 0) {
+    throw new Error("When action requires at least one case.");
+  }
+
+  return {
+    type: "when",
+    cases,
   };
 }

@@ -21,7 +21,7 @@ bun add @ai-sdk/openai
 
 ```ts
 import { openai } from "@ai-sdk/openai";
-import { Policy, PolicyPipeline, deny, escalate, llm } from "protec";
+import { Policy, PolicyPipeline, deny, escalate, llm, when } from "protec";
 
 const noSecrets = new Policy({
   id: "no-secrets",
@@ -95,6 +95,31 @@ const possibleProblem = new Policy({
   action: escalate({
     policies: [productionSecrets, noSecrets],
   }),
+});
+```
+
+Use `when` to combine actions for different confidence bands. Cases run in the
+order you provide them. If no case matches, the failed finding does not block:
+
+```ts
+const possibleSecrets = new Policy({
+  id: "possible-secrets",
+  name: "Possible secrets",
+  instruction: "Choose a response by finding confidence.",
+  action: when(
+    {
+      // Deny high-confidence findings.
+      confidence: 0.95,
+      action: deny("Do not share secrets."),
+    },
+    {
+      // Escalate uncertain findings for detailed review.
+      confidence: 0.4,
+      action: escalate({
+        policy: productionSecrets,
+      }),
+    },
+  ),
 });
 ```
 

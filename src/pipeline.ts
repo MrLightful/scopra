@@ -1,4 +1,11 @@
 import type {
+  DenyPolicyAction,
+  EscalatePolicyAction,
+  PolicyAction,
+  WhenPolicyAction,
+  WhenPolicyActionCase,
+} from "./actions";
+import type {
   EvaluationRequest,
   PolicyDecision,
   PolicyEscalation,
@@ -105,27 +112,29 @@ export class PolicyPipeline {
         continue;
       }
 
-      if (!this.meetsConfidenceThreshold(finding, policy.action.confidence)) {
+      const action = this.resolveAction(finding, policy.action);
+
+      if (action === undefined) {
         continue;
       }
 
-      if (policy.action.type === "deny") {
+      if (action.type === "deny") {
         violations.push({
           policy,
           finding,
-          action: policy.action,
-          message: policy.action.message,
+          action,
+          message: action.message,
         });
         continue;
       }
 
-      const nestedPolicies = policy.action.policies.map((nestedPolicy) => new Policy(nestedPolicy));
+      const nestedPolicies = action.policies.map((nestedPolicy) => new Policy(nestedPolicy));
       const nestedResult = await this.evaluatePolicies(request, nestedPolicies);
 
       escalations.push({
         policy,
         finding,
-        action: policy.action,
+        action,
         policies: nestedPolicies,
         findings: nestedResult.findings,
         violations: nestedResult.violations,
@@ -139,6 +148,47 @@ export class PolicyPipeline {
       violations,
       escalations,
     };
+  }
+
+  private resolveAction(
+    finding: PolicyFinding,
+    action: PolicyAction,
+  ): DenyPolicyAction | EscalatePolicyAction | undefined {
+    if (action.type === "when") {
+      return this.resolveWhenAction(finding, action);
+    }
+
+    if (!this.meetsConfidenceThreshold(finding, action.confidence)) {
+      return undefined;
+    }
+
+    return action;
+  }
+
+  private resolveWhenAction(
+    finding: PolicyFinding,
+    action: WhenPolicyAction,
+  ): DenyPolicyAction | EscalatePolicyAction | undefined {
+    const matchedCase = action.cases.find((candidate) =>
+      this.meetsConfidenceThreshold(finding, candidate.confidence),
+    );
+
+    if (matchedCase === undefined) {
+      return undefined;
+    }
+
+    return this.resolveCaseAction(finding, matchedCase);
+  }
+
+  private resolveCaseAction(
+    finding: PolicyFinding,
+    actionCase: WhenPolicyActionCase,
+  ): DenyPolicyAction | EscalatePolicyAction | undefined {
+    if (!this.meetsConfidenceThreshold(finding, actionCase.action.confidence)) {
+      return undefined;
+    }
+
+    return actionCase.action;
   }
 
   private meetsConfidenceThreshold(finding: PolicyFinding, threshold: number | undefined): boolean {
