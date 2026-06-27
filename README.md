@@ -21,7 +21,70 @@ bun add @ai-sdk/openai
 
 ```ts
 import { openai } from "@ai-sdk/openai";
-import { Policy, PolicyPipeline, deny, escalate, llm, when } from "protec";
+import { AgentScopePolicy, NoSecretsPolicy, PolicyPipeline, llm } from "protec";
+
+const pipeline = new PolicyPipeline({
+  policies: [
+    new NoSecretsPolicy({
+      // Deny only when the failed finding has confidence >= 0.95.
+      confidence: 0.95,
+    }),
+    new AgentScopePolicy({
+      scope: "Customer support for Acme billing only.",
+      message: "That request is outside support scope.",
+    }),
+  ],
+  evaluator: llm(openai("gpt-4.1")),
+});
+```
+
+Common policies are regular `Policy` instances, so they work anywhere a policy is
+accepted:
+
+```ts
+import { openai } from "@ai-sdk/openai";
+import {
+  AgentScopePolicy,
+  NoSecretsPolicy,
+  PersonalDataPolicy,
+  PolicyPipeline,
+  PromptInjectionPolicy,
+  UnsafeToolUsePolicy,
+  llm,
+} from "protec";
+
+const pipeline = new PolicyPipeline({
+  policies: [
+    new NoSecretsPolicy(),
+    new PersonalDataPolicy(),
+    new PromptInjectionPolicy(),
+    new UnsafeToolUsePolicy(),
+    new AgentScopePolicy({
+      scope: "Customer support for Acme billing only.",
+    }),
+  ],
+  evaluator: llm(openai("gpt-4.1")),
+});
+```
+
+Pass a custom `action` when a common policy should escalate or route by
+confidence instead of using its default deny action.
+
+```ts
+import { NoSecretsPolicy, deny } from "protec";
+
+const noSecrets = new NoSecretsPolicy({
+  action: deny("Custom secret warning.", {
+    confidence: 0.95,
+  }),
+});
+```
+
+You can also define policies directly:
+
+```ts
+import { openai } from "@ai-sdk/openai";
+import { Policy, PolicyPipeline, deny, llm } from "protec";
 
 const noSecrets = new Policy({
   id: "no-secrets",
@@ -29,7 +92,6 @@ const noSecrets = new Policy({
   description: "Prevents sensitive data exposure.",
   instruction: "Block exposed API keys and secrets.",
   action: deny("Do not share secrets.", {
-    // Deny only when the failed finding has confidence >= 0.95.
     confidence: 0.95,
   }),
 });

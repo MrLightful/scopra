@@ -11,6 +11,17 @@ export type {
 } from "./actions";
 export { deny, escalate, when } from "./actions";
 export type {
+  AgentScopePolicyOptions,
+  CommonPolicyOptions,
+} from "./common-policies";
+export {
+  AgentScopePolicy,
+  NoSecretsPolicy,
+  PersonalDataPolicy,
+  PromptInjectionPolicy,
+  UnsafeToolUsePolicy,
+} from "./common-policies";
+export type {
   EvaluationRequest,
   InputEvaluationRequest,
   OutputEvaluationRequest,
