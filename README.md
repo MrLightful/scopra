@@ -11,10 +11,17 @@ invocations before the workflow continues.
 bun add protec
 ```
 
+Install the AI SDK provider you want to use with the LLM evaluator:
+
+```sh
+bun add @ai-sdk/openai
+```
+
 ## Usage
 
 ```ts
-import { Policy, PolicyPipeline, deny } from "protec";
+import { openai } from "@ai-sdk/openai";
+import { Policy, PolicyPipeline, deny, llm } from "protec";
 
 const noSecrets = new Policy({
   id: "no-secrets",
@@ -29,15 +36,7 @@ const noSecrets = new Policy({
 
 const pipeline = new PolicyPipeline({
   policies: [noSecrets],
-  evaluator: async ({ request, policies }) => {
-    // Bring your own evaluator: an LLM, rules engine, internal service, or test double.
-    return policies.map((policy) => ({
-      policyId: policy.id,
-      passed: request.type !== "output" || !request.content.includes("sk_live_"),
-      reason: "Checked output for exposed API keys.",
-      confidence: 0.95,
-    }));
-  },
+  evaluator: llm(openai("gpt-4.1")),
 });
 
 const decision = await pipeline.evaluate({
@@ -48,6 +47,22 @@ const decision = await pipeline.evaluate({
 if (!decision.allowed) {
   console.log(decision.message);
 }
+```
+
+You can also bring your own evaluator, such as a rules engine, internal service,
+or test double:
+
+```ts
+const pipeline = new PolicyPipeline({
+  policies: [noSecrets],
+  evaluator: async ({ request, policies }) =>
+    policies.map((policy) => ({
+      policyId: policy.id,
+      passed: request.type !== "output" || !request.content.includes("sk_live_"),
+      reason: "Checked output for exposed API keys.",
+      confidence: 0.95,
+    })),
+});
 ```
 
 ## Evaluation Requests

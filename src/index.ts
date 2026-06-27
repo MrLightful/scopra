@@ -11,6 +11,8 @@ export type {
   PolicyViolation,
   ToolEvaluationRequest,
 } from "./evaluation";
+export type { LlmEvaluatorOptions } from "./llm";
+export { llm } from "./llm";
 export type { PolicyPipelineConfig } from "./pipeline";
 export { PolicyPipeline } from "./pipeline";
 export type { PolicyOptions } from "./policy";
