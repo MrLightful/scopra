@@ -1,10 +1,19 @@
-export type { DenyPolicyAction, DenyPolicyActionOptions, PolicyAction } from "./actions";
-export { deny } from "./actions";
+export type {
+  DenyPolicyAction,
+  DenyPolicyActionOptions,
+  EscalatePolicyAction,
+  EscalatePolicyActionMultipleOptions,
+  EscalatePolicyActionOptions,
+  EscalatePolicyActionSingleOptions,
+  PolicyAction,
+} from "./actions";
+export { deny, escalate } from "./actions";
 export type {
   EvaluationRequest,
   InputEvaluationRequest,
   OutputEvaluationRequest,
   PolicyDecision,
+  PolicyEscalation,
   PolicyEvaluator,
   PolicyEvaluatorContext,
   PolicyFinding,

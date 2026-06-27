@@ -21,7 +21,7 @@ bun add @ai-sdk/openai
 
 ```ts
 import { openai } from "@ai-sdk/openai";
-import { Policy, PolicyPipeline, deny, llm } from "protec";
+import { Policy, PolicyPipeline, deny, escalate, llm } from "protec";
 
 const noSecrets = new Policy({
   id: "no-secrets",
@@ -47,6 +47,55 @@ const decision = await pipeline.evaluate({
 if (!decision.allowed) {
   console.log(decision.message);
 }
+```
+
+Policies can also escalate uncertain findings to more detailed policies. Use
+`policy` for one nested policy or `policies` when a second pass should check
+multiple rules:
+
+```ts
+const productionSecrets = {
+  id: "production-secrets",
+  name: "Production secrets",
+  instruction: "Block exposed production API keys and credentials.",
+  action: deny("Do not share production secrets."),
+};
+
+const possibleSecrets = new Policy({
+  id: "possible-secrets",
+  name: "Possible secrets",
+  instruction: "Escalate possible secrets for detailed review.",
+  action: escalate({
+    policy: productionSecrets,
+    // Escalate only when the failed finding has confidence >= 0.4.
+    confidence: 0.4,
+  }),
+});
+
+const pipeline = new PolicyPipeline({
+  policies: [possibleSecrets],
+  evaluator: llm(openai("gpt-4.1")),
+});
+
+const decision = await pipeline.evaluate({
+  type: "output",
+  content: "Here is the answer.",
+});
+
+console.log(decision.escalations);
+```
+
+For a broader second pass, pass multiple nested policies:
+
+```ts
+const possibleProblem = new Policy({
+  id: "possible-problem",
+  name: "Possible problem",
+  instruction: "Escalate possible problems for detailed review.",
+  action: escalate({
+    policies: [productionSecrets, noSecrets],
+  }),
+});
 ```
 
 You can also bring your own evaluator, such as a rules engine, internal service,

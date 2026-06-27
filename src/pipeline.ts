@@ -1,6 +1,7 @@
 import type {
   EvaluationRequest,
   PolicyDecision,
+  PolicyEscalation,
   PolicyEvaluator,
   PolicyFinding,
   PolicyViolation,
@@ -39,65 +40,104 @@ export class PolicyPipeline {
   /**
    * Evaluates a request and returns a decision.
    *
-   * Failed findings deny the request when they match a configured policy and
-   * meet any confidence threshold on that policy's deny action. Findings for
-   * unknown policies are kept but do not block.
+   * Failed findings deny or escalate when they match a configured policy and
+   * meet any confidence threshold on that policy's action. Findings for unknown
+   * policies are kept but do not block.
    */
   async evaluate(request: EvaluationRequest): Promise<PolicyDecision> {
-    const findings = await this.evaluator({
-      request,
-      policies: this.policies,
-    });
-    const violations = findings
-      .filter((finding) => !finding.passed)
-      .map((finding) => this.toViolation(finding))
-      .filter((violation): violation is PolicyViolation => violation !== undefined);
+    const result = await this.evaluatePolicies(request, this.policies);
 
-    if (violations.length === 0) {
+    if (result.violations.length === 0) {
       return {
         allowed: true,
         request,
-        findings,
+        findings: result.findings,
         violations: [],
+        escalations: result.escalations,
       };
     }
 
-    const firstViolation = violations[0];
+    const firstViolation = result.violations[0];
 
     if (firstViolation === undefined) {
       return {
         allowed: true,
         request,
-        findings,
+        findings: result.findings,
         violations: [],
+        escalations: result.escalations,
       };
     }
 
     return {
       allowed: false,
       request,
-      findings,
-      violations,
+      findings: result.findings,
+      violations: result.violations,
+      escalations: result.escalations,
       message: firstViolation.message,
     };
   }
 
-  private toViolation(finding: PolicyFinding): PolicyViolation | undefined {
-    const policy = this.policies.find((candidate) => candidate.id === finding.policyId);
+  private async evaluatePolicies(
+    request: EvaluationRequest,
+    policies: readonly Policy[],
+  ): Promise<{
+    readonly findings: readonly PolicyFinding[];
+    readonly violations: readonly PolicyViolation[];
+    readonly escalations: readonly PolicyEscalation[];
+  }> {
+    const findings = await this.evaluator({
+      request,
+      policies,
+    });
+    const violations: PolicyViolation[] = [];
+    const escalations: PolicyEscalation[] = [];
 
-    if (policy === undefined) {
-      return undefined;
-    }
+    for (const finding of findings) {
+      if (finding.passed) {
+        continue;
+      }
 
-    if (!this.meetsConfidenceThreshold(finding, policy.action.confidence)) {
-      return undefined;
+      const policy = policies.find((candidate) => candidate.id === finding.policyId);
+
+      if (policy === undefined) {
+        continue;
+      }
+
+      if (!this.meetsConfidenceThreshold(finding, policy.action.confidence)) {
+        continue;
+      }
+
+      if (policy.action.type === "deny") {
+        violations.push({
+          policy,
+          finding,
+          action: policy.action,
+          message: policy.action.message,
+        });
+        continue;
+      }
+
+      const nestedPolicies = policy.action.policies.map((nestedPolicy) => new Policy(nestedPolicy));
+      const nestedResult = await this.evaluatePolicies(request, nestedPolicies);
+
+      escalations.push({
+        policy,
+        finding,
+        action: policy.action,
+        policies: nestedPolicies,
+        findings: nestedResult.findings,
+        violations: nestedResult.violations,
+      });
+      escalations.push(...nestedResult.escalations);
+      violations.push(...nestedResult.violations);
     }
 
     return {
-      policy,
-      finding,
-      action: policy.action,
-      message: policy.action.message,
+      findings,
+      violations,
+      escalations,
     };
   }
 

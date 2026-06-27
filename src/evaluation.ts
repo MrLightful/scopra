@@ -1,4 +1,4 @@
-import type { DenyPolicyAction } from "./actions";
+import type { DenyPolicyAction, EscalatePolicyAction } from "./actions";
 import type { Policy } from "./policy";
 
 /**
@@ -87,6 +87,24 @@ export type PolicyViolation = {
 };
 
 /**
+ * Detailed policy evaluation triggered by a failed escalation policy.
+ */
+export type PolicyEscalation = {
+  /** Policy that triggered escalation. */
+  readonly policy: Policy;
+  /** Failed finding returned for the triggering policy. */
+  readonly finding: PolicyFinding;
+  /** Escalation action attached to the triggering policy. */
+  readonly action: EscalatePolicyAction;
+  /** Detailed policies evaluated by this escalation. */
+  readonly policies: readonly Policy[];
+  /** Findings returned for the detailed policies. */
+  readonly findings: readonly PolicyFinding[];
+  /** Blocking violations produced by the detailed policies. */
+  readonly violations: readonly PolicyViolation[];
+};
+
+/**
  * Final policy decision for an evaluated request.
  */
 export type PolicyDecision =
@@ -99,6 +117,8 @@ export type PolicyDecision =
       readonly findings: readonly PolicyFinding[];
       /** Empty because allowed decisions have no blocking violations. */
       readonly violations: readonly [];
+      /** Escalated evaluations triggered while reaching this decision. */
+      readonly escalations: readonly PolicyEscalation[];
     }
   | {
       /** Indicates the request was denied by at least one blocking violation. */
@@ -109,6 +129,8 @@ export type PolicyDecision =
       readonly findings: readonly PolicyFinding[];
       /** Blocking violations created from failed deny policies. */
       readonly violations: readonly PolicyViolation[];
+      /** Escalated evaluations triggered while reaching this decision. */
+      readonly escalations: readonly PolicyEscalation[];
       /** Denial message from the first blocking violation. */
       readonly message: string;
     };
