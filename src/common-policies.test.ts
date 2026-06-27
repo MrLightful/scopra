@@ -1,11 +1,16 @@
 import { describe, expect, test } from "bun:test";
 import {
   AgentScopePolicy,
+  CopyrightPolicy,
   deny,
+  FinancialAdvicePolicy,
+  LegalAdvicePolicy,
+  MedicalAdvicePolicy,
   NoSecretsPolicy,
   PersonalDataPolicy,
   Policy,
   PromptInjectionPolicy,
+  RegulatedAdvicePolicy,
   UnsafeToolUsePolicy,
   when,
 } from "./index";
@@ -45,6 +50,23 @@ describe("common policies", () => {
     });
   });
 
+  test("creates the copyright policy", () => {
+    const policy = new CopyrightPolicy();
+
+    expect(policy).toBeInstanceOf(Policy);
+    expect(policy).toEqual({
+      id: "copyright",
+      name: "Copyright",
+      description: "Prevents substantial reproduction of protected content.",
+      instruction:
+        "Fail when the evaluated input, output, or tool invocation requests, reproduces, or facilitates substantial copyrighted text, song lyrics, books, articles, paid content, or other protected material beyond brief permitted excerpts or content supplied by the user.",
+      action: {
+        type: "deny",
+        message: "Do not reproduce protected content.",
+      },
+    });
+  });
+
   test("creates the prompt injection policy", () => {
     const policy = new PromptInjectionPolicy();
 
@@ -58,6 +80,75 @@ describe("common policies", () => {
       action: {
         type: "deny",
         message: "That request attempts to bypass the agent's instructions.",
+      },
+    });
+  });
+
+  test("creates the regulated advice policy", () => {
+    const policy = new RegulatedAdvicePolicy();
+
+    expect(policy).toBeInstanceOf(Policy);
+    expect(policy).toEqual({
+      id: "regulated-advice",
+      name: "Regulated advice",
+      description: "Prevents personalized professional advice in regulated domains.",
+      instruction:
+        "Fail when the evaluated input, output, or tool invocation gives personalized medical, legal, financial, investment, tax, insurance, or other professional advice that should be handled by a qualified professional. Pass general educational information and encouragement to consult a qualified professional.",
+      action: {
+        type: "deny",
+        message: "I cannot provide personalized professional advice.",
+      },
+    });
+  });
+
+  test("creates the medical advice policy", () => {
+    const policy = new MedicalAdvicePolicy();
+
+    expect(policy).toBeInstanceOf(Policy);
+    expect(policy).toEqual({
+      id: "medical-advice",
+      name: "Medical advice",
+      description: "Prevents patient-specific diagnosis, treatment, or medication guidance.",
+      instruction:
+        "Fail when the evaluated input, output, or tool invocation provides diagnosis, treatment instructions, medication dosing, or patient-specific medical decisions. Pass general wellness information, educational medical context, and advice to consult a qualified medical professional.",
+      action: {
+        type: "deny",
+        message: "I cannot provide personalized medical advice.",
+      },
+    });
+  });
+
+  test("creates the legal advice policy", () => {
+    const policy = new LegalAdvicePolicy();
+
+    expect(policy).toBeInstanceOf(Policy);
+    expect(policy).toEqual({
+      id: "legal-advice",
+      name: "Legal advice",
+      description: "Prevents jurisdiction-specific legal conclusions or counsel.",
+      instruction:
+        "Fail when the evaluated input, output, or tool invocation provides jurisdiction-specific legal conclusions, contract interpretation, litigation strategy, or instructions that present as legal counsel for a specific situation. Pass general legal information and advice to consult a qualified legal professional.",
+      action: {
+        type: "deny",
+        message: "I cannot provide personalized legal advice.",
+      },
+    });
+  });
+
+  test("creates the financial advice policy", () => {
+    const policy = new FinancialAdvicePolicy();
+
+    expect(policy).toBeInstanceOf(Policy);
+    expect(policy).toEqual({
+      id: "financial-advice",
+      name: "Financial advice",
+      description:
+        "Prevents personalized investment, tax, insurance, or financial planning advice.",
+      instruction:
+        "Fail when the evaluated input, output, or tool invocation gives personalized investment, tax, insurance, lending, or financial planning directives for a specific person or organization. Pass general financial education and advice to consult a qualified financial professional.",
+      action: {
+        type: "deny",
+        message: "I cannot provide personalized financial advice.",
       },
     });
   });
@@ -124,5 +215,17 @@ describe("common policies", () => {
     });
 
     expect(policy.action).toBe(action);
+  });
+
+  test("uses a caller-provided action for advice and copyright policies", () => {
+    const action = deny("Custom advice warning.", {
+      confidence: 0.8,
+    });
+
+    expect(new CopyrightPolicy({ action }).action).toBe(action);
+    expect(new RegulatedAdvicePolicy({ action }).action).toBe(action);
+    expect(new MedicalAdvicePolicy({ action }).action).toBe(action);
+    expect(new LegalAdvicePolicy({ action }).action).toBe(action);
+    expect(new FinancialAdvicePolicy({ action }).action).toBe(action);
   });
 });

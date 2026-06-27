@@ -45,10 +45,15 @@ accepted:
 import { openai } from "@ai-sdk/openai";
 import {
   AgentScopePolicy,
+  CopyrightPolicy,
+  FinancialAdvicePolicy,
+  LegalAdvicePolicy,
+  MedicalAdvicePolicy,
   NoSecretsPolicy,
   PersonalDataPolicy,
   PolicyPipeline,
   PromptInjectionPolicy,
+  RegulatedAdvicePolicy,
   UnsafeToolUsePolicy,
   llm,
 } from "protec";
@@ -57,7 +62,12 @@ const pipeline = new PolicyPipeline({
   policies: [
     new NoSecretsPolicy(),
     new PersonalDataPolicy(),
+    new CopyrightPolicy(),
     new PromptInjectionPolicy(),
+    new RegulatedAdvicePolicy(),
+    new MedicalAdvicePolicy(),
+    new LegalAdvicePolicy(),
+    new FinancialAdvicePolicy(),
     new UnsafeToolUsePolicy(),
     new AgentScopePolicy({
       scope: "Customer support for Acme billing only.",

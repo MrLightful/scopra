@@ -16,9 +16,14 @@ export type {
 } from "./common-policies";
 export {
   AgentScopePolicy,
+  CopyrightPolicy,
+  FinancialAdvicePolicy,
+  LegalAdvicePolicy,
+  MedicalAdvicePolicy,
   NoSecretsPolicy,
   PersonalDataPolicy,
   PromptInjectionPolicy,
+  RegulatedAdvicePolicy,
   UnsafeToolUsePolicy,
 } from "./common-policies";
 export type {
