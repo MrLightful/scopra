@@ -77,16 +77,15 @@ const pipeline = new PolicyPipeline({
 });
 ```
 
-Pass a custom `action` when a common policy should escalate or route by
-confidence instead of using its default deny action.
+Pass `message`, `confidence`, or `escalation` when a common policy should
+override its default denial behavior.
 
 ```ts
-import { NoSecretsPolicy, deny } from "protec";
+import { NoSecretsPolicy } from "protec";
 
 const noSecrets = new NoSecretsPolicy({
-  action: deny("Custom secret warning.", {
-    confidence: 0.95,
-  }),
+  message: "Custom secret warning.",
+  confidence: 0.95,
 });
 ```
 
@@ -94,16 +93,15 @@ You can also define policies directly:
 
 ```ts
 import { openai } from "@ai-sdk/openai";
-import { Policy, PolicyPipeline, deny, llm } from "protec";
+import { Policy, PolicyPipeline, llm } from "protec";
 
 const noSecrets = new Policy({
   id: "no-secrets",
   name: "No secrets",
   description: "Prevents sensitive data exposure.",
   instruction: "Block exposed API keys and secrets.",
-  action: deny("Do not share secrets.", {
-    confidence: 0.95,
-  }),
+  message: "Do not share secrets.",
+  confidence: 0.95,
 });
 
 const pipeline = new PolicyPipeline({
@@ -130,18 +128,19 @@ const productionSecrets = {
   id: "production-secrets",
   name: "Production secrets",
   instruction: "Block exposed production API keys and credentials.",
-  action: deny("Do not share production secrets."),
+  message: "Do not share production secrets.",
 };
 
 const possibleSecrets = new Policy({
   id: "possible-secrets",
   name: "Possible secrets",
   instruction: "Escalate possible secrets for detailed review.",
-  action: escalate({
+  message: "Review possible secrets.",
+  escalation: {
     policy: productionSecrets,
     // Escalate only when the failed finding has confidence >= 0.4.
     confidence: 0.4,
-  }),
+  },
 });
 
 const pipeline = new PolicyPipeline({
@@ -164,34 +163,10 @@ const possibleProblem = new Policy({
   id: "possible-problem",
   name: "Possible problem",
   instruction: "Escalate possible problems for detailed review.",
-  action: escalate({
+  message: "Review possible problems.",
+  escalation: {
     policies: [productionSecrets, noSecrets],
-  }),
-});
-```
-
-Use `when` to combine actions for different confidence bands. Cases run in the
-order you provide them. If no case matches, the failed finding does not block:
-
-```ts
-const possibleSecrets = new Policy({
-  id: "possible-secrets",
-  name: "Possible secrets",
-  instruction: "Choose a response by finding confidence.",
-  action: when(
-    {
-      // Deny high-confidence findings.
-      confidence: 0.95,
-      action: deny("Do not share secrets."),
-    },
-    {
-      // Escalate uncertain findings for detailed review.
-      confidence: 0.4,
-      action: escalate({
-        policy: productionSecrets,
-      }),
-    },
-  ),
+  },
 });
 ```
 

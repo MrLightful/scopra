@@ -1,11 +1,4 @@
 import type {
-  DenyPolicyAction,
-  EscalatePolicyAction,
-  PolicyAction,
-  WhenPolicyAction,
-  WhenPolicyActionCase,
-} from "./actions";
-import type {
   EvaluationRequest,
   PolicyDecision,
   PolicyEscalation,
@@ -48,7 +41,7 @@ export class PolicyPipeline {
    * Evaluates a request and returns a decision.
    *
    * Failed findings deny or escalate when they match a configured policy and
-   * meet any confidence threshold on that policy's action. Findings for unknown
+   * meet any configured confidence threshold. Findings for unknown
    * policies are kept but do not block.
    */
   async evaluate(request: EvaluationRequest): Promise<PolicyDecision> {
@@ -112,29 +105,32 @@ export class PolicyPipeline {
         continue;
       }
 
-      const action = this.resolveAction(finding, policy.action);
+      if (policy.escalation === undefined) {
+        if (!this.meetsConfidenceThreshold(finding, policy.confidence)) {
+          continue;
+        }
 
-      if (action === undefined) {
-        continue;
-      }
-
-      if (action.type === "deny") {
         violations.push({
           policy,
           finding,
-          action,
-          message: action.message,
+          message: policy.message,
         });
         continue;
       }
 
-      const nestedPolicies = action.policies.map((nestedPolicy) => new Policy(nestedPolicy));
+      if (!this.meetsConfidenceThreshold(finding, policy.escalation.confidence)) {
+        continue;
+      }
+
+      const nestedPolicies = policy.escalation.policies.map(
+        (nestedPolicy) => new Policy(nestedPolicy),
+      );
       const nestedResult = await this.evaluatePolicies(request, nestedPolicies);
 
       escalations.push({
         policy,
         finding,
-        action,
+        escalation: policy.escalation,
         policies: nestedPolicies,
         findings: nestedResult.findings,
         violations: nestedResult.violations,
@@ -148,47 +144,6 @@ export class PolicyPipeline {
       violations,
       escalations,
     };
-  }
-
-  private resolveAction(
-    finding: PolicyFinding,
-    action: PolicyAction,
-  ): DenyPolicyAction | EscalatePolicyAction | undefined {
-    if (action.type === "when") {
-      return this.resolveWhenAction(finding, action);
-    }
-
-    if (!this.meetsConfidenceThreshold(finding, action.confidence)) {
-      return undefined;
-    }
-
-    return action;
-  }
-
-  private resolveWhenAction(
-    finding: PolicyFinding,
-    action: WhenPolicyAction,
-  ): DenyPolicyAction | EscalatePolicyAction | undefined {
-    const matchedCase = action.cases.find((candidate) =>
-      this.meetsConfidenceThreshold(finding, candidate.confidence),
-    );
-
-    if (matchedCase === undefined) {
-      return undefined;
-    }
-
-    return this.resolveCaseAction(finding, matchedCase);
-  }
-
-  private resolveCaseAction(
-    finding: PolicyFinding,
-    actionCase: WhenPolicyActionCase,
-  ): DenyPolicyAction | EscalatePolicyAction | undefined {
-    if (!this.meetsConfidenceThreshold(finding, actionCase.action.confidence)) {
-      return undefined;
-    }
-
-    return actionCase.action;
   }
 
   private meetsConfidenceThreshold(finding: PolicyFinding, threshold: number | undefined): boolean {

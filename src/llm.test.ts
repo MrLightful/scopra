@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test";
 import { MockLanguageModelV4 } from "ai/test";
-import { deny, llm, Policy, type PolicyOptions } from "./index";
+import { llm, Policy, type PolicyOptions } from "./index";
 
 const noSecretsPolicy: PolicyOptions = {
   id: "no-secrets",
   name: "No secrets",
   description: "Prevents sensitive data exposure.",
   instruction: "Block exposed API keys and secrets.",
-  action: deny("Do not share secrets."),
+  message: "Do not share secrets.",
 };
 
 const stayInScopePolicy: PolicyOptions = {
@@ -15,7 +15,7 @@ const stayInScopePolicy: PolicyOptions = {
   name: "Stay in scope",
   description: "Keeps the assistant focused on the product.",
   instruction: "Block requests outside the assistant's intended scope.",
-  action: deny("That request is outside this assistant's scope."),
+  message: "That request is outside this assistant's scope.",
 };
 
 describe("llm", () => {

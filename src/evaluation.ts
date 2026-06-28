@@ -1,5 +1,4 @@
-import type { DenyPolicyAction, EscalatePolicyAction } from "./actions";
-import type { Policy } from "./policy";
+import type { Policy, PolicyEscalationConfig } from "./policy";
 
 /**
  * Request to evaluate user-provided input before the workflow continues.
@@ -73,15 +72,13 @@ export type PolicyEvaluator = (
 ) => readonly PolicyFinding[] | Promise<readonly PolicyFinding[]>;
 
 /**
- * Failed finding for a policy whose action denies the evaluated request.
+ * Failed finding for a policy that denies the evaluated request.
  */
 export type PolicyViolation = {
   /** Policy that produced the violation. */
   readonly policy: Policy;
   /** Failed finding returned by the evaluator. */
   readonly finding: PolicyFinding;
-  /** Deny action attached to the failed policy. */
-  readonly action: DenyPolicyAction;
   /** Denial message returned for this violation. */
   readonly message: string;
 };
@@ -94,8 +91,8 @@ export type PolicyEscalation = {
   readonly policy: Policy;
   /** Failed finding returned for the triggering policy. */
   readonly finding: PolicyFinding;
-  /** Escalation action attached to the triggering policy. */
-  readonly action: EscalatePolicyAction;
+  /** Escalation configuration attached to the triggering policy. */
+  readonly escalation: PolicyEscalationConfig;
   /** Detailed policies evaluated by this escalation. */
   readonly policies: readonly Policy[];
   /** Findings returned for the detailed policies. */

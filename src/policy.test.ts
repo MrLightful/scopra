@@ -1,12 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { deny, escalate, Policy, type PolicyOptions, when } from "./index";
+import { Policy, type PolicyEscalationOptions, type PolicyOptions } from "./index";
 
 const noSecretsPolicy: PolicyOptions = {
   id: "no-secrets",
   name: "No secrets",
   description: "Prevents sensitive data exposure.",
   instruction: "Block exposed API keys and secrets.",
-  action: deny("Do not share secrets."),
+  message: "Do not share secrets.",
 };
 
 const stayInScopePolicy: PolicyOptions = {
@@ -14,7 +14,7 @@ const stayInScopePolicy: PolicyOptions = {
   name: "Stay in scope",
   description: "Keeps the assistant focused on the product.",
   instruction: "Block requests outside the assistant's intended scope.",
-  action: deny("That request is outside this assistant's scope."),
+  message: "That request is outside this assistant's scope.",
 };
 
 const highRiskSecretsPolicy: PolicyOptions = {
@@ -22,7 +22,7 @@ const highRiskSecretsPolicy: PolicyOptions = {
   name: "High-risk secrets",
   description: "Prevents exposed production secrets.",
   instruction: "Block exposed production API keys and credentials.",
-  action: deny("Do not share production secrets."),
+  message: "Do not share production secrets.",
 };
 
 describe("Policy", () => {
@@ -34,38 +34,30 @@ describe("Policy", () => {
       name: "No secrets",
       description: "Prevents sensitive data exposure.",
       instruction: "Block exposed API keys and secrets.",
-      action: {
-        type: "deny",
-        message: "Do not share secrets.",
-      },
+      message: "Do not share secrets.",
+      confidence: undefined,
+      escalation: undefined,
     });
   });
 
-  test("creates a policy with deny action options", () => {
+  test("creates a policy with denial confidence", () => {
     const policy = new Policy({
       ...noSecretsPolicy,
-      action: deny("Do not share secrets.", {
-        confidence: 0.95,
-      }),
-    });
-
-    expect(policy.action).toEqual({
-      type: "deny",
-      message: "Do not share secrets.",
       confidence: 0.95,
     });
+
+    expect(policy.confidence).toBe(0.95);
   });
 
   test("creates a policy with one escalation policy", () => {
     const policy = new Policy({
       ...noSecretsPolicy,
-      action: escalate({
+      escalation: {
         policy: highRiskSecretsPolicy,
-      }),
+      },
     });
 
-    expect(policy.action).toEqual({
-      type: "escalate",
+    expect(policy.escalation).toEqual({
       policies: [highRiskSecretsPolicy],
     });
   });
@@ -73,28 +65,40 @@ describe("Policy", () => {
   test("creates a policy with multiple escalation policies and options", () => {
     const policy = new Policy({
       ...noSecretsPolicy,
-      action: escalate({
+      escalation: {
         policies: [highRiskSecretsPolicy, stayInScopePolicy],
         confidence: 0.4,
-      }),
+      },
     });
 
-    expect(policy.action).toEqual({
-      type: "escalate",
+    expect(policy.escalation).toEqual({
       policies: [highRiskSecretsPolicy, stayInScopePolicy],
       confidence: 0.4,
     });
   });
 
   test("rejects escalation without nested policies", () => {
-    expect(() =>
-      escalate({
-        policies: [],
-      }),
+    expect(
+      () =>
+        new Policy({
+          ...noSecretsPolicy,
+          escalation: {
+            policies: [],
+          },
+        }),
     ).toThrow("at least one policy");
   });
 
-  test("rejects conditional actions without cases", () => {
-    expect(() => when()).toThrow("at least one case");
+  test("rejects escalation with both policy and policies", () => {
+    expect(
+      () =>
+        new Policy({
+          ...noSecretsPolicy,
+          escalation: {
+            policy: highRiskSecretsPolicy,
+            policies: [stayInScopePolicy],
+          } as unknown as PolicyEscalationOptions,
+        }),
+    ).toThrow("exactly one of policy or policies");
   });
 });
