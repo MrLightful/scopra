@@ -148,6 +148,26 @@ if (!decision.allowed) {
 }
 ```
 
+The response generator infers the response language from the denied request and
+violation context by default. Pass `locale` when you want to guide the response
+toward a specific language or regional variant. BCP 47 tags such as `"nb-NO"` or
+`"es-MX"` are recommended, but plain labels such as `"Norwegian"` are accepted
+as model guidance.
+
+```ts
+if (!decision.allowed) {
+  const response = await generateViolationResponse(openai("gpt-4.1"), decision, {
+    locale: "nb-NO",
+  });
+
+  console.log(response);
+}
+```
+
+Common policy messages are not translated automatically. Pass localized
+`message` overrides on your policies when you want those denial messages to use
+specific wording.
+
 Policies can also escalate low-confidence findings to more detailed policies.
 Use `policy` for one nested policy or `policies` when a second pass should
 check multiple rules. Escalations require `maxConfidence`; pass or fail

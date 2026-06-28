@@ -80,6 +80,88 @@ describe("generateViolationResponse", () => {
     expect(call.maxOutputTokens).toBe(120);
   });
 
+  test("includes localized request and violation text unchanged in the prompt", async () => {
+    const model = new MockLanguageModelV4({
+      doGenerate: createTextGeneration("Jeg kan ikke dele hemmeligheter."),
+    });
+
+    await generateViolationResponse(
+      model,
+      createDeniedDecision({
+        request: {
+          type: "output",
+          content: "Her er nøkkelen: sk_live_123. تماس بعداً.",
+        },
+        violations: [
+          {
+            policy: new Policy({
+              ...noSecretsPolicy,
+              name: "Ingen hemmeligheter",
+              description: "Hindrer deling av sensitive nøkler.",
+              message: "Ikke del hemmeligheter.",
+            }),
+            finding: {
+              policyId: "no-secrets",
+              passed: false,
+              reason: "Svaret inneholdt en API-nøkkel.",
+              confidence: 0.97,
+            },
+            message: "Ikke del hemmeligheter.",
+          },
+        ],
+      }),
+    );
+
+    const prompt = JSON.stringify(model.doGenerateCalls[0]?.prompt);
+
+    expect(prompt).toContain("Her er nøkkelen: sk_live_123. تماس بعداً.");
+    expect(prompt).toContain("Ingen hemmeligheter");
+    expect(prompt).toContain("Hindrer deling av sensitive nøkler.");
+    expect(prompt).toContain("Svaret inneholdt en API-nøkkel.");
+    expect(prompt).toContain("Ikke del hemmeligheter.");
+  });
+
+  test("includes explicit response locale and forwards generation options", async () => {
+    const model = new MockLanguageModelV4({
+      doGenerate: createTextGeneration("Jeg kan ikke hjelpe med å dele hemmeligheter."),
+    });
+
+    await generateViolationResponse(model, createDeniedDecision(), {
+      locale: "nb-NO",
+      temperature: 0,
+      maxOutputTokens: 80,
+    });
+
+    const call = model.doGenerateCalls[0];
+    expect(call).toBeDefined();
+
+    if (call === undefined) {
+      throw new Error("Expected the mock model to receive one generate call.");
+    }
+
+    const prompt = JSON.stringify(call.prompt);
+
+    expect(prompt).toContain('\\"responseLocale\\": \\"nb-NO\\"');
+    expect(prompt).toContain("Use the provided responseLocale");
+    expect(call.temperature).toBe(0);
+    expect(call.maxOutputTokens).toBe(80);
+  });
+
+  test("uses locale inference guidance when response locale is omitted", async () => {
+    const model = new MockLanguageModelV4({
+      doGenerate: createTextGeneration("I cannot help with that request."),
+    });
+
+    await generateViolationResponse(model, createDeniedDecision());
+
+    const prompt = JSON.stringify(model.doGenerateCalls[0]?.prompt);
+
+    expect(prompt).toContain(
+      "Infer the appropriate response language/locale from the request and denial context.",
+    );
+    expect(prompt).not.toContain("responseLocale");
+  });
+
   test("includes multiple violations in the prompt", async () => {
     const model = new MockLanguageModelV4({
       doGenerate: createTextGeneration("I cannot help with that request."),
