@@ -15,6 +15,8 @@ export {
   UnsafeToolUsePolicy,
 } from "./common-policies";
 export type {
+  AllowedPolicyDecision,
+  DeniedPolicyDecision,
   EvaluationRequest,
   InputEvaluationRequest,
   OutputEvaluationRequest,
@@ -38,3 +40,5 @@ export type {
   PolicyOptions,
 } from "./policy";
 export { Policy } from "./policy";
+export type { GenerateViolationResponseOptions } from "./response";
+export { generateViolationResponse } from "./response";

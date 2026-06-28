@@ -115,7 +115,36 @@ const decision = await pipeline.evaluate({
 });
 
 if (!decision.allowed) {
-  console.log(decision.message);
+  console.log(decision.violations[0]?.message);
+}
+```
+
+When you want a more tailored user-facing response, generate one from the
+denied decision:
+
+```ts
+import { openai } from "@ai-sdk/openai";
+import {
+  NoSecretsPolicy,
+  PolicyPipeline,
+  generateViolationResponse,
+  llm,
+} from "protec";
+
+const pipeline = new PolicyPipeline({
+  policies: [new NoSecretsPolicy()],
+  evaluator: llm(openai("gpt-4.1")),
+});
+
+const decision = await pipeline.evaluate({
+  type: "output",
+  content: "sk_live_123",
+});
+
+if (!decision.allowed) {
+  const response = await generateViolationResponse(openai("gpt-4.1"), decision);
+
+  console.log(response);
 }
 ```
 

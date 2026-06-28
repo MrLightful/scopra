@@ -58,25 +58,12 @@ export class PolicyPipeline {
       };
     }
 
-    const firstViolation = result.violations[0];
-
-    if (firstViolation === undefined) {
-      return {
-        allowed: true,
-        request,
-        findings: result.findings,
-        violations: [],
-        escalations: result.escalations,
-      };
-    }
-
     return {
       allowed: false,
       request,
       findings: result.findings,
       violations: result.violations,
       escalations: result.escalations,
-      message: firstViolation.message,
     };
   }
 

@@ -238,7 +238,7 @@ describe("PolicyPipeline", () => {
     expect(decision.allowed).toBe(false);
 
     if (!decision.allowed) {
-      expect(decision.message).toBe("Do not share production secrets.");
+      expect(decision.violations[0]?.message).toBe("Do not share production secrets.");
     }
 
     expect(decision.findings).toEqual([
@@ -593,7 +593,9 @@ describe("PolicyPipeline", () => {
     expect(decision.allowed).toBe(false);
 
     if (!decision.allowed) {
-      expect(decision.message).toBe("That request is outside this assistant's scope.");
+      expect(decision.violations[0]?.message).toBe(
+        "That request is outside this assistant's scope.",
+      );
     }
   });
 

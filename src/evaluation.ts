@@ -102,32 +102,38 @@ export type PolicyEscalation = {
 };
 
 /**
+ * Policy decision for a request that passed without blocking violations.
+ */
+export type AllowedPolicyDecision = {
+  /** Indicates the request passed without blocking violations. */
+  readonly allowed: true;
+  /** Request that was evaluated. */
+  readonly request: EvaluationRequest;
+  /** All findings returned by the evaluator. */
+  readonly findings: readonly PolicyFinding[];
+  /** Empty because allowed decisions have no blocking violations. */
+  readonly violations: readonly [];
+  /** Escalated evaluations triggered while reaching this decision. */
+  readonly escalations: readonly PolicyEscalation[];
+};
+
+/**
+ * Policy decision for a request denied by at least one blocking violation.
+ */
+export type DeniedPolicyDecision = {
+  /** Indicates the request was denied by at least one blocking violation. */
+  readonly allowed: false;
+  /** Request that was evaluated. */
+  readonly request: EvaluationRequest;
+  /** All findings returned by the evaluator. */
+  readonly findings: readonly PolicyFinding[];
+  /** Blocking violations created from failed deny policies. */
+  readonly violations: readonly PolicyViolation[];
+  /** Escalated evaluations triggered while reaching this decision. */
+  readonly escalations: readonly PolicyEscalation[];
+};
+
+/**
  * Final policy decision for an evaluated request.
  */
-export type PolicyDecision =
-  | {
-      /** Indicates the request passed without blocking violations. */
-      readonly allowed: true;
-      /** Request that was evaluated. */
-      readonly request: EvaluationRequest;
-      /** All findings returned by the evaluator. */
-      readonly findings: readonly PolicyFinding[];
-      /** Empty because allowed decisions have no blocking violations. */
-      readonly violations: readonly [];
-      /** Escalated evaluations triggered while reaching this decision. */
-      readonly escalations: readonly PolicyEscalation[];
-    }
-  | {
-      /** Indicates the request was denied by at least one blocking violation. */
-      readonly allowed: false;
-      /** Request that was evaluated. */
-      readonly request: EvaluationRequest;
-      /** All findings returned by the evaluator. */
-      readonly findings: readonly PolicyFinding[];
-      /** Blocking violations created from failed deny policies. */
-      readonly violations: readonly PolicyViolation[];
-      /** Escalated evaluations triggered while reaching this decision. */
-      readonly escalations: readonly PolicyEscalation[];
-      /** Denial message from the first blocking violation. */
-      readonly message: string;
-    };
+export type PolicyDecision = AllowedPolicyDecision | DeniedPolicyDecision;
