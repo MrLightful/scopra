@@ -40,11 +40,24 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.7",
+    "@tanstack/ai": "^0.38.0",
     "@types/bun": "^1.3.2",
+    "ai": "^7.0.4",
     "typescript": "^6.0.3"
   },
+  "peerDependencies": {
+    "@tanstack/ai": "^0.38.0",
+    "ai": "^7.0.4"
+  },
+  "peerDependenciesMeta": {
+    "@tanstack/ai": {
+      "optional": true
+    },
+    "ai": {
+      "optional": true
+    }
+  },
   "dependencies": {
-    "ai": "^7.0.4",
     "zod": "^4.4.3"
   }
 }

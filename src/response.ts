@@ -1,10 +1,5 @@
-import {
-  generateText,
-  type LanguageModel,
-  type LanguageModelCallOptions,
-  type RequestOptions,
-} from "ai";
 import type { DeniedPolicyDecision } from "./evaluation";
+import type { ProtecModel, ProtecModelOptions } from "./model";
 
 const DEFAULT_SYSTEM = [
   "You write user-facing response text for an AI application when a policy denies a request.",
@@ -15,51 +10,41 @@ const DEFAULT_SYSTEM = [
   "Offer a safe alternative only when it is naturally supported by the violation context.",
 ].join(" ");
 
-type ViolationResponseGenerationOptions = Pick<
-  LanguageModelCallOptions,
-  | "frequencyPenalty"
-  | "maxOutputTokens"
-  | "presencePenalty"
-  | "reasoning"
-  | "seed"
-  | "temperature"
-  | "topK"
-  | "topP"
-> &
-  Pick<RequestOptions, "abortSignal" | "headers" | "maxRetries">;
-
 /**
  * Options for generating user-facing response text from a denied policy decision.
  */
-export type GenerateViolationResponseOptions = ViolationResponseGenerationOptions & {
+export type GenerateViolationResponseOptions = {
   /** Instructions sent to the model instead of Protec's default response-writing instructions. */
   readonly system?: string;
   /** App-specific response guidance included with the violation context. */
   readonly instructions?: string;
   /** Preferred response language or locale, such as a BCP 47 tag like "nb-NO". */
   readonly locale?: string;
+  /** Optional cancellation signal for model requests. */
+  readonly abortSignal?: AbortSignal;
+  /** SDK-specific generation options passed to the configured model adapter. */
+  readonly modelOptions?: ProtecModelOptions;
 };
 
 /**
  * Generates user-facing response text for a denied policy decision.
  */
 export async function generateViolationResponse(
-  model: LanguageModel,
+  model: ProtecModel,
   decision: DeniedPolicyDecision,
   options: GenerateViolationResponseOptions = {},
 ): Promise<string> {
-  const { system, instructions, locale, ...generationOptions } = options;
-  const result = await generateText({
-    model,
-    instructions: system ?? DEFAULT_SYSTEM,
+  const { system, instructions, locale, abortSignal, modelOptions } = options;
+
+  return model.generateText({
+    system: system ?? DEFAULT_SYSTEM,
     prompt: buildPrompt(decision, {
       instructions,
       locale,
     }),
-    ...generationOptions,
+    abortSignal,
+    modelOptions,
   });
-
-  return result.text;
 }
 
 type PromptOptions = {

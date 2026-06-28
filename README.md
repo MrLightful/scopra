@@ -11,7 +11,7 @@ invocations before the workflow continues.
 bun add protec
 ```
 
-Install the AI SDK provider you want to use with the LLM evaluator:
+Install the AI SDK you want to use with the model-backed evaluator:
 
 ```sh
 bun add @ai-sdk/openai
@@ -21,7 +21,7 @@ bun add @ai-sdk/openai
 
 ```ts
 import { openai } from "@ai-sdk/openai";
-import { AgentScopePolicy, NoSecretsPolicy, PolicyPipeline, llm } from "protec";
+import { AgentScopePolicy, NoSecretsPolicy, PolicyPipeline, vercel } from "protec";
 
 const pipeline = new PolicyPipeline({
   policies: [
@@ -34,7 +34,19 @@ const pipeline = new PolicyPipeline({
       message: "That request is outside support scope.",
     }),
   ],
-  evaluator: llm(openai("gpt-4.1")),
+  evaluator: vercel(openai("gpt-4.1")),
+});
+```
+
+TanStack AI adapters work through the `tanstack()` helper:
+
+```ts
+import { openaiText } from "@tanstack/ai-openai";
+import { NoSecretsPolicy, PolicyPipeline, tanstack } from "protec";
+
+const pipeline = new PolicyPipeline({
+  policies: [new NoSecretsPolicy()],
+  evaluator: tanstack(openaiText("gpt-5.2")),
 });
 ```
 
@@ -55,7 +67,7 @@ import {
   PromptInjectionPolicy,
   RegulatedAdvicePolicy,
   UnsafeToolUsePolicy,
-  llm,
+  vercel,
 } from "protec";
 
 const pipeline = new PolicyPipeline({
@@ -73,7 +85,7 @@ const pipeline = new PolicyPipeline({
       scope: "Customer support for Acme billing only.",
     }),
   ],
-  evaluator: llm(openai("gpt-4.1")),
+  evaluator: vercel(openai("gpt-4.1")),
 });
 ```
 
@@ -93,7 +105,7 @@ You can also define policies directly:
 
 ```ts
 import { openai } from "@ai-sdk/openai";
-import { Policy, PolicyPipeline, llm } from "protec";
+import { Policy, PolicyPipeline, vercel } from "protec";
 
 const noSecrets = new Policy({
   id: "no-secrets",
@@ -106,7 +118,7 @@ const noSecrets = new Policy({
 
 const pipeline = new PolicyPipeline({
   policies: [noSecrets],
-  evaluator: llm(openai("gpt-4.1")),
+  evaluator: vercel(openai("gpt-4.1")),
 });
 
 const decision = await pipeline.evaluate({
@@ -128,12 +140,14 @@ import {
   NoSecretsPolicy,
   PolicyPipeline,
   generateViolationResponse,
-  llm,
+  vercel,
 } from "protec";
+
+const model = vercel(openai("gpt-4.1"));
 
 const pipeline = new PolicyPipeline({
   policies: [new NoSecretsPolicy()],
-  evaluator: llm(openai("gpt-4.1")),
+  evaluator: model,
 });
 
 const decision = await pipeline.evaluate({
@@ -142,7 +156,7 @@ const decision = await pipeline.evaluate({
 });
 
 if (!decision.allowed) {
-  const response = await generateViolationResponse(openai("gpt-4.1"), decision);
+  const response = await generateViolationResponse(model, decision);
 
   console.log(response);
 }
@@ -195,7 +209,7 @@ const possibleSecrets = new Policy({
 
 const pipeline = new PolicyPipeline({
   policies: [possibleSecrets],
-  evaluator: llm(openai("gpt-4.1")),
+  evaluator: vercel(openai("gpt-4.1")),
 });
 
 const decision = await pipeline.evaluate({

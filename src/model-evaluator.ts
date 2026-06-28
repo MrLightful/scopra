@@ -1,11 +1,6 @@
-import {
-  generateObject,
-  type LanguageModel,
-  type LanguageModelCallOptions,
-  type RequestOptions,
-} from "ai";
 import { z } from "zod";
 import type { EvaluationRequest, PolicyEvaluator, PolicyFinding } from "./evaluation";
+import type { ProtecModel, ProtecModelOptions } from "./model";
 import type { Policy } from "./policy";
 
 const DEFAULT_SYSTEM = [
@@ -28,49 +23,46 @@ const evaluationSchema = z.object({
   findings: z.array(findingSchema),
 });
 
-type LlmGenerationOptions = Pick<
-  LanguageModelCallOptions,
-  | "frequencyPenalty"
-  | "maxOutputTokens"
-  | "presencePenalty"
-  | "reasoning"
-  | "seed"
-  | "temperature"
-  | "topK"
-  | "topP"
-> &
-  Pick<RequestOptions, "abortSignal" | "headers" | "maxRetries">;
-
 /**
- * Options for the Vercel AI SDK-backed evaluator.
+ * Options for model-backed policy evaluation.
  */
-export type LlmEvaluatorOptions = LlmGenerationOptions & {
+export type ModelEvaluatorOptions = {
   /** Instructions sent to the model instead of Protec's default evaluator instructions. */
-  readonly system?: string;
+  readonly system?: string | undefined;
+  /** Optional cancellation signal for model requests. */
+  readonly abortSignal?: AbortSignal | undefined;
+  /** SDK-specific generation options passed to the configured model adapter. */
+  readonly modelOptions?: ProtecModelOptions | undefined;
 };
 
-/**
- * Creates a policy evaluator backed by a Vercel AI SDK language model.
- */
-export function llm(model: LanguageModel, options: LlmEvaluatorOptions = {}): PolicyEvaluator {
-  const { system, ...generationOptions } = options;
+export function createModelEvaluator(
+  model: ProtecModel,
+  options: ModelEvaluatorOptions = {},
+): PolicyEvaluator {
+  return async ({ request, policies }) => evaluateWithModel(model, request, policies, options);
+}
 
-  return async ({ request, policies }) => {
-    const result = await generateObject({
-      model,
-      instructions: system ?? DEFAULT_SYSTEM,
-      prompt: buildPrompt(request, policies),
-      schema: evaluationSchema,
-      schemaName: "PolicyEvaluation",
-      schemaDescription: "Policy findings for a Protec evaluation request.",
-      ...generationOptions,
-    });
+async function evaluateWithModel(
+  model: ProtecModel,
+  request: EvaluationRequest,
+  policies: readonly Policy[],
+  options: ModelEvaluatorOptions,
+): Promise<readonly PolicyFinding[]> {
+  const result = await model.generateObject({
+    system: options.system ?? DEFAULT_SYSTEM,
+    prompt: buildPrompt(request, policies),
+    schema: evaluationSchema,
+    schemaName: "PolicyEvaluation",
+    schemaDescription: "Policy findings for a Protec evaluation request.",
+    abortSignal: options.abortSignal,
+    modelOptions: options.modelOptions,
+  });
+  const evaluation = evaluationSchema.parse(result);
+  const findings = evaluation.findings.map(toPolicyFinding);
 
-    const findings = result.object.findings.map(toPolicyFinding);
-    assertFindingsMatchPolicies(findings, policies);
+  assertFindingsMatchPolicies(findings, policies);
 
-    return findings;
-  };
+  return findings;
 }
 
 function buildPrompt(request: EvaluationRequest, policies: readonly Policy[]): string {
@@ -111,12 +103,12 @@ function assertFindingsMatchPolicies(
 
   for (const finding of findings) {
     if (!expectedIds.has(finding.policyId)) {
-      throw new Error(`LLM evaluator returned an unknown policy id: ${finding.policyId}`);
+      throw new Error(`Model evaluator returned an unknown policy id: ${finding.policyId}`);
     }
 
     if (seenIds.has(finding.policyId)) {
       throw new Error(
-        `LLM evaluator returned duplicate findings for policy id: ${finding.policyId}`,
+        `Model evaluator returned duplicate findings for policy id: ${finding.policyId}`,
       );
     }
 
@@ -128,6 +120,6 @@ function assertFindingsMatchPolicies(
     .filter((policyId) => !seenIds.has(policyId));
 
   if (missingIds.length > 0) {
-    throw new Error(`LLM evaluator omitted findings for policy ids: ${missingIds.join(", ")}`);
+    throw new Error(`Model evaluator omitted findings for policy ids: ${missingIds.join(", ")}`);
   }
 }

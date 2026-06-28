@@ -6,14 +6,21 @@ import type {
   PolicyFinding,
   PolicyViolation,
 } from "./evaluation";
+import { isProtecModel, type ProtecModel } from "./model";
+import { createModelEvaluator, type ModelEvaluatorOptions } from "./model-evaluator";
 import { Policy, type PolicyOptions } from "./policy";
+
+/**
+ * Evaluator configuration accepted by a policy pipeline.
+ */
+export type PolicyPipelineEvaluator = ProtecModel | PolicyEvaluator;
 
 /**
  * Configuration for creating a policy pipeline.
  */
-export type PolicyPipelineConfig = {
+export type PolicyPipelineConfig = ModelEvaluatorOptions & {
   /** Evaluator used to produce findings for each evaluation request. */
-  readonly evaluator: PolicyEvaluator;
+  readonly evaluator: PolicyPipelineEvaluator;
   /** Policies to evaluate, provided as instances or plain configuration. */
   readonly policies: readonly (Policy | PolicyOptions)[];
 };
@@ -31,7 +38,13 @@ export class PolicyPipeline {
    * Creates a policy pipeline and normalizes plain policy options to {@link Policy} instances.
    */
   constructor(config: PolicyPipelineConfig) {
-    this.evaluator = config.evaluator;
+    this.evaluator = isProtecModel(config.evaluator)
+      ? createModelEvaluator(config.evaluator, {
+          system: config.system,
+          abortSignal: config.abortSignal,
+          modelOptions: config.modelOptions,
+        })
+      : config.evaluator;
     this.policies = config.policies.map((policy) =>
       policy instanceof Policy ? policy : new Policy(policy),
     );

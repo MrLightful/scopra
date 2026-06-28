@@ -28,9 +28,14 @@ export type {
   PolicyViolation,
   ToolEvaluationRequest,
 } from "./evaluation";
-export type { LlmEvaluatorOptions } from "./llm";
-export { llm } from "./llm";
-export type { PolicyPipelineConfig } from "./pipeline";
+export type {
+  ProtecModel,
+  ProtecModelOptions,
+  ProtecObjectInput,
+  ProtecTextInput,
+} from "./model";
+export type { ModelEvaluatorOptions } from "./model-evaluator";
+export type { PolicyPipelineConfig, PolicyPipelineEvaluator } from "./pipeline";
 export { PolicyPipeline } from "./pipeline";
 export type {
   PolicyEscalationConfig,
@@ -42,3 +47,5 @@ export type {
 export { Policy } from "./policy";
 export type { GenerateViolationResponseOptions } from "./response";
 export { generateViolationResponse } from "./response";
+export { tanstack } from "./tanstack";
+export { vercel } from "./vercel";
