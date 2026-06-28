@@ -183,22 +183,26 @@ Common policy messages are not translated automatically. Pass localized
 specific wording.
 
 Policies can also escalate low-confidence findings to more detailed policies.
-Use `policy` for one nested policy or `policies` when a second pass should
-check multiple rules. Escalations require `maxConfidence`; pass or fail
-findings at or below that confidence trigger the detailed review:
+Use a parent policy with a short, possibly generalized instruction to detect
+whether a matter may be present, then use escalated policies with more detailed
+and elaborate instructions to increase confidence. Use `policy` for one nested
+policy or `policies` when a second pass should check multiple rules.
+Escalations require `maxConfidence`; pass or fail findings at or below that
+confidence trigger the detailed review:
 
 ```ts
 const productionSecrets = {
   id: "production-secrets",
   name: "Production secrets",
-  instruction: "Block exposed production API keys and credentials.",
+  instruction:
+    "Confirm whether the content exposes production API keys, credentials, tokens, or other deployable secrets.",
   message: "Do not share production secrets.",
 };
 
 const possibleSecrets = new Policy({
   id: "possible-secrets",
   name: "Possible secrets",
-  instruction: "Escalate possible secrets for detailed review.",
+  instruction: "Detect whether the content may contain secrets.",
   message: "Review possible secrets.",
   escalation: {
     policy: productionSecrets,
