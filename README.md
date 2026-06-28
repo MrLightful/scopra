@@ -170,7 +170,7 @@ as model guidance.
 
 ```ts
 if (!decision.allowed) {
-  const response = await generateViolationResponse(openai("gpt-4.1"), decision, {
+  const response = await generateViolationResponse(model, decision, {
     locale: "nb-NO",
   });
 
