@@ -6,8 +6,8 @@ export type PolicyEscalationSingleOptions = {
   readonly policy: PolicyOptions;
   /** Multiple policies are mutually exclusive with policy. */
   readonly policies?: never;
-  /** Optional minimum finding confidence required to escalate. */
-  readonly confidence?: number;
+  /** Parent finding confidence at or below this value triggers detailed review. */
+  readonly maxConfidence: number;
 };
 
 /**
@@ -18,8 +18,8 @@ export type PolicyEscalationMultipleOptions = {
   readonly policy?: never;
   /** Policies evaluated when this policy escalates. */
   readonly policies: readonly PolicyOptions[];
-  /** Optional minimum finding confidence required to escalate. */
-  readonly confidence?: number;
+  /** Parent finding confidence at or below this value triggers detailed review. */
+  readonly maxConfidence: number;
 };
 
 /**
@@ -35,8 +35,8 @@ export type PolicyEscalationOptions =
 export type PolicyEscalationConfig = {
   /** Detailed policies evaluated when this policy escalates. */
   readonly policies: readonly PolicyOptions[];
-  /** Optional minimum finding confidence required to escalate. */
-  readonly confidence?: number;
+  /** Parent finding confidence at or below this value triggers detailed review. */
+  readonly maxConfidence: number;
 };
 
 /**
@@ -55,7 +55,7 @@ export type PolicyOptions = {
   readonly message: string;
   /** Optional minimum finding confidence required to deny. */
   readonly confidence?: number;
-  /** Optional review-only nested policies evaluated when this policy fails. */
+  /** Optional review-only nested policies evaluated for low-confidence findings. */
   readonly escalation?: PolicyEscalationOptions;
 };
 
@@ -75,7 +75,7 @@ export class Policy {
   readonly message: string;
   /** Optional minimum finding confidence required to deny. */
   readonly confidence: number | undefined;
-  /** Optional review-only nested policies evaluated when this policy fails. */
+  /** Optional review-only nested policies evaluated for low-confidence findings. */
   readonly escalation: PolicyEscalationConfig | undefined;
 
   /**
@@ -107,8 +107,16 @@ function normalizeEscalation(options: PolicyEscalationOptions): PolicyEscalation
     throw new Error("Policy escalation requires at least one policy.");
   }
 
+  if ("confidence" in options && options.confidence !== undefined) {
+    throw new Error("Policy escalation uses maxConfidence instead of confidence.");
+  }
+
+  if (!("maxConfidence" in options) || options.maxConfidence === undefined) {
+    throw new Error("Policy escalation requires maxConfidence.");
+  }
+
   return {
     policies,
-    ...(options.confidence === undefined ? {} : { confidence: options.confidence }),
+    maxConfidence: options.maxConfidence,
   };
 }

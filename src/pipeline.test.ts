@@ -223,7 +223,7 @@ describe("PolicyPipeline", () => {
           message: "Review possible secrets.",
           escalation: {
             policy: highRiskSecretsPolicy,
-            confidence: 0.4,
+            maxConfidence: 0.5,
           },
         },
       ],
@@ -263,7 +263,7 @@ describe("PolicyPipeline", () => {
         confidence: 0.45,
       },
       escalation: {
-        confidence: 0.4,
+        maxConfidence: 0.5,
       },
       policies: [
         {
@@ -292,6 +292,7 @@ describe("PolicyPipeline", () => {
   test("auto-runs multiple nested escalation policies", async () => {
     const escalation = {
       policies: [highRiskSecretsPolicy, stayInScopePolicy],
+      maxConfidence: 0.7,
     };
     const pipeline = new PolicyPipeline({
       evaluator: ({ policies }) => {
@@ -372,7 +373,7 @@ describe("PolicyPipeline", () => {
     });
   });
 
-  test("does not escalate when a failed finding is below the escalation confidence threshold", async () => {
+  test("does not escalate when a failed finding is above the escalation confidence threshold", async () => {
     const seenPolicies: string[][] = [];
     const pipeline = new PolicyPipeline({
       evaluator: ({ policies }) => {
@@ -382,7 +383,7 @@ describe("PolicyPipeline", () => {
           {
             policyId: "possible-secrets",
             passed: false,
-            confidence: 0.39,
+            confidence: 0.91,
           },
         ];
       },
@@ -394,7 +395,7 @@ describe("PolicyPipeline", () => {
           message: "Review possible secrets.",
           escalation: {
             policy: highRiskSecretsPolicy,
-            confidence: 0.4,
+            maxConfidence: 0.4,
           },
         },
       ],
@@ -416,11 +417,118 @@ describe("PolicyPipeline", () => {
         {
           policyId: "possible-secrets",
           passed: false,
-          confidence: 0.39,
+          confidence: 0.91,
         },
       ],
       violations: [],
       escalations: [],
+    });
+  });
+
+  test("does not escalate when the parent finding has no confidence", async () => {
+    const seenPolicies: string[][] = [];
+    const pipeline = new PolicyPipeline({
+      evaluator: ({ policies }) => {
+        seenPolicies.push(policies.map((policy) => policy.id));
+
+        return [
+          {
+            policyId: "possible-secrets",
+            passed: false,
+          },
+        ];
+      },
+      policies: [
+        {
+          id: "possible-secrets",
+          name: "Possible secrets",
+          instruction: "Escalate possible secrets for detailed review.",
+          message: "Review possible secrets.",
+          escalation: {
+            policy: highRiskSecretsPolicy,
+            maxConfidence: 0.4,
+          },
+        },
+      ],
+    });
+
+    const decision = await pipeline.evaluate({
+      type: "output",
+      content: "possible secret",
+    });
+
+    expect(seenPolicies).toEqual([["possible-secrets"]]);
+    expect(decision).toEqual({
+      allowed: true,
+      request: {
+        type: "output",
+        content: "possible secret",
+      },
+      findings: [
+        {
+          policyId: "possible-secrets",
+          passed: false,
+        },
+      ],
+      violations: [],
+      escalations: [],
+    });
+  });
+
+  test("auto-runs nested escalation policies for low-confidence passed findings", async () => {
+    const seenPolicies: string[][] = [];
+    const pipeline = new PolicyPipeline({
+      evaluator: ({ policies }) => {
+        seenPolicies.push(policies.map((policy) => policy.id));
+
+        if (policies[0]?.id === "possible-secrets") {
+          return [
+            {
+              policyId: "possible-secrets",
+              passed: true,
+              confidence: 0.35,
+            },
+          ];
+        }
+
+        return policies.map((policy) => ({
+          policyId: policy.id,
+          passed: true,
+          confidence: 0.99,
+        }));
+      },
+      policies: [
+        {
+          id: "possible-secrets",
+          name: "Possible secrets",
+          instruction: "Escalate possible secrets for detailed review.",
+          message: "Review possible secrets.",
+          escalation: {
+            policy: highRiskSecretsPolicy,
+            maxConfidence: 0.4,
+          },
+        },
+      ],
+    });
+
+    const decision = await pipeline.evaluate({
+      type: "output",
+      content: "maybe safe",
+    });
+
+    expect(seenPolicies).toEqual([["possible-secrets"], ["high-risk-secrets"]]);
+    expect(decision.allowed).toBe(true);
+    expect(decision.violations).toEqual([]);
+    expect(decision.escalations).toHaveLength(1);
+    expect(decision.escalations[0]).toMatchObject({
+      finding: {
+        policyId: "possible-secrets",
+        passed: true,
+        confidence: 0.35,
+      },
+      escalation: {
+        maxConfidence: 0.4,
+      },
     });
   });
 
@@ -450,6 +558,7 @@ describe("PolicyPipeline", () => {
           message: "Review possible secrets.",
           escalation: {
             policy: highRiskSecretsPolicy,
+            maxConfidence: 0.95,
           },
         },
       ],

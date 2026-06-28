@@ -128,7 +128,7 @@ describe("common policies", () => {
       confidence: 0.5,
       escalation: {
         policy: detailPolicy,
-        confidence: 0.8,
+        maxConfidence: 0.8,
       },
     });
 
@@ -136,7 +136,7 @@ describe("common policies", () => {
     expect(policy.confidence).toBe(0.5);
     expect(policy.escalation).toEqual({
       policies: [detailPolicy],
-      confidence: 0.8,
+      maxConfidence: 0.8,
     });
   });
 
@@ -146,6 +146,7 @@ describe("common policies", () => {
       confidence: 0.8,
       escalation: {
         policy: detailPolicy,
+        maxConfidence: 0.7,
       },
     };
 

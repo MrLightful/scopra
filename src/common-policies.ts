@@ -8,7 +8,7 @@ export type CommonPolicyOptions = {
   readonly message?: string;
   /** Optional minimum finding confidence required to deny. */
   readonly confidence?: number;
-  /** Optional review-only nested policies evaluated when this policy fails. */
+  /** Optional review-only nested policies evaluated for low-confidence findings. */
   readonly escalation?: PolicyEscalationOptions;
 };
 

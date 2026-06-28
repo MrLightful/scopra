@@ -119,9 +119,10 @@ if (!decision.allowed) {
 }
 ```
 
-Policies can also escalate uncertain findings to more detailed policies. Use
-`policy` for one nested policy or `policies` when a second pass should check
-multiple rules:
+Policies can also escalate low-confidence findings to more detailed policies.
+Use `policy` for one nested policy or `policies` when a second pass should
+check multiple rules. Escalations require `maxConfidence`; pass or fail
+findings at or below that confidence trigger the detailed review:
 
 ```ts
 const productionSecrets = {
@@ -138,8 +139,8 @@ const possibleSecrets = new Policy({
   message: "Review possible secrets.",
   escalation: {
     policy: productionSecrets,
-    // Escalate only when the failed finding has confidence >= 0.4.
-    confidence: 0.4,
+    // Escalate when the parent finding has confidence <= 0.4.
+    maxConfidence: 0.4,
   },
 });
 
@@ -166,6 +167,7 @@ const possibleProblem = new Policy({
   message: "Review possible problems.",
   escalation: {
     policies: [productionSecrets, noSecrets],
+    maxConfidence: 0.4,
   },
 });
 ```

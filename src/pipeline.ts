@@ -40,8 +40,9 @@ export class PolicyPipeline {
   /**
    * Evaluates a request and returns a decision.
    *
-   * Failed findings deny or escalate when they match a configured policy and
-   * meet any configured confidence threshold. Findings for unknown
+   * Failed findings deny when they match a configured policy and meet any
+   * configured denial confidence threshold. Low-confidence findings escalate
+   * when they match a configured escalation policy. Findings for unknown
    * policies are kept but do not block.
    */
   async evaluate(request: EvaluationRequest): Promise<PolicyDecision> {
@@ -95,48 +96,47 @@ export class PolicyPipeline {
     const escalations: PolicyEscalation[] = [];
 
     for (const finding of findings) {
-      if (finding.passed) {
-        continue;
-      }
-
       const policy = policies.find((candidate) => candidate.id === finding.policyId);
 
       if (policy === undefined) {
         continue;
       }
 
-      if (policy.escalation === undefined) {
-        if (!this.meetsConfidenceThreshold(finding, policy.confidence)) {
-          continue;
+      if (policy.escalation !== undefined) {
+        if (this.meetsEscalationThreshold(finding, policy.escalation.maxConfidence)) {
+          const nestedPolicies = policy.escalation.policies.map(
+            (nestedPolicy) => new Policy(nestedPolicy),
+          );
+          const nestedResult = await this.evaluatePolicies(request, nestedPolicies);
+
+          escalations.push({
+            policy,
+            finding,
+            escalation: policy.escalation,
+            policies: nestedPolicies,
+            findings: nestedResult.findings,
+            violations: nestedResult.violations,
+          });
+          escalations.push(...nestedResult.escalations);
+          violations.push(...nestedResult.violations);
         }
 
-        violations.push({
-          policy,
-          finding,
-          message: policy.message,
-        });
         continue;
       }
 
-      if (!this.meetsConfidenceThreshold(finding, policy.escalation.confidence)) {
+      if (finding.passed) {
         continue;
       }
 
-      const nestedPolicies = policy.escalation.policies.map(
-        (nestedPolicy) => new Policy(nestedPolicy),
-      );
-      const nestedResult = await this.evaluatePolicies(request, nestedPolicies);
+      if (!this.meetsConfidenceThreshold(finding, policy.confidence)) {
+        continue;
+      }
 
-      escalations.push({
+      violations.push({
         policy,
         finding,
-        escalation: policy.escalation,
-        policies: nestedPolicies,
-        findings: nestedResult.findings,
-        violations: nestedResult.violations,
+        message: policy.message,
       });
-      escalations.push(...nestedResult.escalations);
-      violations.push(...nestedResult.violations);
     }
 
     return {
@@ -152,5 +152,9 @@ export class PolicyPipeline {
     }
 
     return finding.confidence !== undefined && finding.confidence >= threshold;
+  }
+
+  private meetsEscalationThreshold(finding: PolicyFinding, maxConfidence: number): boolean {
+    return finding.confidence !== undefined && finding.confidence <= maxConfidence;
   }
 }

@@ -54,11 +54,13 @@ describe("Policy", () => {
       ...noSecretsPolicy,
       escalation: {
         policy: highRiskSecretsPolicy,
+        maxConfidence: 0.4,
       },
     });
 
     expect(policy.escalation).toEqual({
       policies: [highRiskSecretsPolicy],
+      maxConfidence: 0.4,
     });
   });
 
@@ -67,14 +69,39 @@ describe("Policy", () => {
       ...noSecretsPolicy,
       escalation: {
         policies: [highRiskSecretsPolicy, stayInScopePolicy],
-        confidence: 0.4,
+        maxConfidence: 0.4,
       },
     });
 
     expect(policy.escalation).toEqual({
       policies: [highRiskSecretsPolicy, stayInScopePolicy],
-      confidence: 0.4,
+      maxConfidence: 0.4,
     });
+  });
+
+  test("rejects escalation without max confidence", () => {
+    expect(
+      () =>
+        new Policy({
+          ...noSecretsPolicy,
+          escalation: {
+            policy: highRiskSecretsPolicy,
+          } as unknown as PolicyEscalationOptions,
+        }),
+    ).toThrow("maxConfidence");
+  });
+
+  test("rejects escalation with old confidence option", () => {
+    expect(
+      () =>
+        new Policy({
+          ...noSecretsPolicy,
+          escalation: {
+            policy: highRiskSecretsPolicy,
+            confidence: 0.4,
+          } as unknown as PolicyEscalationOptions,
+        }),
+    ).toThrow("maxConfidence");
   });
 
   test("rejects escalation without nested policies", () => {
@@ -84,6 +111,7 @@ describe("Policy", () => {
           ...noSecretsPolicy,
           escalation: {
             policies: [],
+            maxConfidence: 0.4,
           },
         }),
     ).toThrow("at least one policy");
@@ -97,6 +125,7 @@ describe("Policy", () => {
           escalation: {
             policy: highRiskSecretsPolicy,
             policies: [stayInScopePolicy],
+            maxConfidence: 0.4,
           } as unknown as PolicyEscalationOptions,
         }),
     ).toThrow("exactly one of policy or policies");
