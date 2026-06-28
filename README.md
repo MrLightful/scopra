@@ -66,6 +66,7 @@ import {
   PolicyPipeline,
   PromptInjectionPolicy,
   RegulatedAdvicePolicy,
+  SocialEngineeringPolicy,
   UnsafeToolUsePolicy,
   vercel,
 } from "protec";
@@ -76,6 +77,7 @@ const pipeline = new PolicyPipeline({
     new PersonalDataPolicy(),
     new CopyrightPolicy(),
     new PromptInjectionPolicy(),
+    new SocialEngineeringPolicy(),
     new RegulatedAdvicePolicy(),
     new MedicalAdvicePolicy(),
     new LegalAdvicePolicy(),

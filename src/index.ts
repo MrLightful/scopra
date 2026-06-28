@@ -12,6 +12,7 @@ export {
   PersonalDataPolicy,
   PromptInjectionPolicy,
   RegulatedAdvicePolicy,
+  SocialEngineeringPolicy,
   UnsafeToolUsePolicy,
 } from "./common-policies";
 export type {
