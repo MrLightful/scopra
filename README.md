@@ -255,6 +255,25 @@ const pipeline = new PolicyPipeline({
 });
 ```
 
+Policies can override the pipeline evaluator when one rule needs a different
+model or service:
+
+```ts
+const pipeline = new PolicyPipeline({
+  policies: [
+    noSecrets,
+    new Policy({
+      id: "billing-scope",
+      name: "Billing scope",
+      instruction: "Block requests outside billing support.",
+      message: "That request is outside billing support.",
+      evaluator: vercel(openai("gpt-4.1-mini")),
+    }),
+  ],
+  evaluator: vercel(openai("gpt-4.1")),
+});
+```
+
 ## Evaluation Requests
 
 ```ts

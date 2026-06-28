@@ -8,6 +8,7 @@ import {
   NoSecretsPolicy,
   PersonalDataPolicy,
   Policy,
+  type PolicyEvaluator,
   type PolicyOptions,
   PromptInjectionPolicy,
   RegulatedAdvicePolicy,
@@ -33,6 +34,7 @@ describe("common policies", () => {
       instruction:
         "Fail when the evaluated input, output, or tool invocation exposes API keys, access tokens, passwords, private keys, signing secrets, database credentials, or other authentication secrets. Pass benign discussion of secret handling that does not reveal an actual secret.",
       message: "Do not share secrets.",
+      evaluator: undefined,
       confidence: undefined,
       escalation: undefined,
     });
@@ -120,6 +122,19 @@ describe("common policies", () => {
 
     expect(policy.message).toBe("Custom secret warning.");
     expect(policy.confidence).toBe(0.9);
+  });
+
+  test("applies evaluator overrides", () => {
+    const evaluator: PolicyEvaluator = ({ policies }) =>
+      policies.map((policy) => ({
+        policyId: policy.id,
+        passed: true,
+      }));
+    const policy = new NoSecretsPolicy({
+      evaluator,
+    });
+
+    expect(policy.evaluator).toBe(evaluator);
   });
 
   test("applies escalation overrides", () => {

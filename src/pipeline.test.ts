@@ -1,5 +1,12 @@
 import { describe, expect, test } from "bun:test";
-import { Policy, type PolicyEvaluator, type PolicyOptions, PolicyPipeline } from "./index";
+import {
+  Policy,
+  type PolicyEvaluator,
+  type PolicyOptions,
+  PolicyPipeline,
+  type ProtecModel,
+  type ProtecObjectInput,
+} from "./index";
 
 const noSecretsPolicy: PolicyOptions = {
   id: "no-secrets",
@@ -87,6 +94,212 @@ describe("PolicyPipeline", () => {
       ],
       violations: [],
       escalations: [],
+    });
+  });
+
+  test("uses a policy evaluator override instead of the pipeline evaluator", async () => {
+    const pipelineEvaluator: PolicyEvaluator = ({ policies }) =>
+      policies.map((policy) => ({
+        policyId: policy.id,
+        passed: true,
+      }));
+    const policyEvaluator: PolicyEvaluator = ({ policies }) =>
+      policies.map((policy) => ({
+        policyId: policy.id,
+        passed: false,
+        reason: "Checked by the policy-specific evaluator.",
+      }));
+    const pipeline = new PolicyPipeline({
+      evaluator: pipelineEvaluator,
+      policies: [
+        {
+          ...noSecretsPolicy,
+          evaluator: policyEvaluator,
+        },
+      ],
+    });
+
+    const decision = await pipeline.evaluate({
+      type: "output",
+      content: "sk_live_123",
+    });
+
+    expect(decision.allowed).toBe(false);
+    expect(decision.findings).toEqual([
+      {
+        policyId: "no-secrets",
+        passed: false,
+        reason: "Checked by the policy-specific evaluator.",
+      },
+    ]);
+  });
+
+  test("evaluates policies with and without evaluator overrides in one decision", async () => {
+    const pipelineEvaluator: PolicyEvaluator = ({ policies }) =>
+      policies.map((policy) => ({
+        policyId: policy.id,
+        passed: true,
+      }));
+    const policyEvaluator: PolicyEvaluator = ({ policies }) =>
+      policies.map((policy) => ({
+        policyId: policy.id,
+        passed: false,
+      }));
+    const pipeline = new PolicyPipeline({
+      evaluator: pipelineEvaluator,
+      policies: [
+        noSecretsPolicy,
+        {
+          ...stayInScopePolicy,
+          evaluator: policyEvaluator,
+        },
+      ],
+    });
+
+    const decision = await pipeline.evaluate({
+      type: "input",
+      content: "Book a vacation and include this token.",
+    });
+
+    expect(decision.allowed).toBe(false);
+    expect(decision.findings).toEqual([
+      {
+        policyId: "no-secrets",
+        passed: true,
+      },
+      {
+        policyId: "stay-in-scope",
+        passed: false,
+      },
+    ]);
+    expect(decision.violations.map((violation) => violation.policy.id)).toEqual(["stay-in-scope"]);
+  });
+
+  test("batches multiple policies that share one evaluator override", async () => {
+    const seenPolicies: string[][] = [];
+    const sharedEvaluator: PolicyEvaluator = ({ policies }) => {
+      seenPolicies.push(policies.map((policy) => policy.id));
+
+      return policies.map((policy) => ({
+        policyId: policy.id,
+        passed: true,
+      }));
+    };
+    const pipeline = new PolicyPipeline({
+      evaluator: () => {
+        throw new Error("Unexpected pipeline evaluator call.");
+      },
+      policies: [
+        {
+          ...noSecretsPolicy,
+          evaluator: sharedEvaluator,
+        },
+        {
+          ...stayInScopePolicy,
+          evaluator: sharedEvaluator,
+        },
+      ],
+    });
+
+    await pipeline.evaluate({
+      type: "input",
+      content: "Hello",
+    });
+
+    expect(seenPolicies).toEqual([["no-secrets", "stay-in-scope"]]);
+  });
+
+  test("uses evaluator overrides on nested escalation policies", async () => {
+    const seenPolicies: string[][] = [];
+    const nestedEvaluator: PolicyEvaluator = ({ policies }) => {
+      seenPolicies.push(policies.map((policy) => policy.id));
+
+      return policies.map((policy) => ({
+        policyId: policy.id,
+        passed: false,
+        confidence: 0.99,
+      }));
+    };
+    const pipeline = new PolicyPipeline({
+      evaluator: ({ policies }) => {
+        seenPolicies.push(policies.map((policy) => policy.id));
+
+        return [
+          {
+            policyId: "possible-secrets",
+            passed: true,
+            confidence: 0.2,
+          },
+        ];
+      },
+      policies: [
+        {
+          id: "possible-secrets",
+          name: "Possible secrets",
+          instruction: "Escalate possible secrets for detailed review.",
+          message: "Review possible secrets.",
+          escalation: {
+            policy: {
+              ...highRiskSecretsPolicy,
+              evaluator: nestedEvaluator,
+            },
+            maxConfidence: 0.4,
+          },
+        },
+      ],
+    });
+
+    const decision = await pipeline.evaluate({
+      type: "output",
+      content: "maybe safe",
+    });
+
+    expect(seenPolicies).toEqual([["possible-secrets"], ["high-risk-secrets"]]);
+    expect(decision.allowed).toBe(false);
+    expect(decision.escalations[0]?.findings).toEqual([
+      {
+        policyId: "high-risk-secrets",
+        passed: false,
+        confidence: 0.99,
+      },
+    ]);
+  });
+
+  test("normalizes model evaluator overrides with pipeline model options", async () => {
+    const model = createObjectModel({
+      findings: [
+        {
+          policyId: "no-secrets",
+          passed: true,
+        },
+      ],
+    });
+    const pipeline = new PolicyPipeline({
+      evaluator: () => {
+        throw new Error("Unexpected pipeline evaluator call.");
+      },
+      policies: [
+        {
+          ...noSecretsPolicy,
+          evaluator: model,
+        },
+      ],
+      system: "Use policy-specific model review.",
+      modelOptions: {
+        temperature: 0,
+      },
+    });
+
+    const decision = await pipeline.evaluate({
+      type: "input",
+      content: "Hello",
+    });
+
+    expect(decision.allowed).toBe(true);
+    expect(model.generateObjectCalls).toHaveLength(1);
+    expect(model.generateObjectCalls[0]?.system).toBe("Use policy-specific model review.");
+    expect(model.generateObjectCalls[0]?.modelOptions).toEqual({
+      temperature: 0,
     });
   });
 
@@ -704,3 +917,22 @@ describe("PolicyPipeline", () => {
     ]);
   });
 });
+
+type TestModel = ProtecModel & {
+  readonly generateObjectCalls: ProtecObjectInput[];
+};
+
+function createObjectModel(object: unknown): TestModel {
+  const generateObjectCalls: ProtecObjectInput[] = [];
+
+  return {
+    generateObjectCalls,
+    async generateText() {
+      throw new Error("Unexpected generateText call.");
+    },
+    async generateObject(input) {
+      generateObjectCalls.push(input);
+      return object;
+    },
+  };
+}

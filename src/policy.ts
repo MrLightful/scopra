@@ -1,3 +1,11 @@
+import type { PolicyEvaluator } from "./evaluation";
+import type { ProtecModel } from "./model";
+
+/**
+ * Evaluator configuration accepted by policies and policy pipelines.
+ */
+export type PolicyEvaluatorConfig = ProtecModel | PolicyEvaluator;
+
 /**
  * Options for configuring escalation to one nested policy.
  */
@@ -53,6 +61,8 @@ export type PolicyOptions = {
   readonly instruction: string;
   /** Message returned when this policy denies a request. */
   readonly message: string;
+  /** Optional evaluator used instead of the pipeline evaluator for this policy. */
+  readonly evaluator?: PolicyEvaluatorConfig;
   /** Optional minimum finding confidence required to deny. */
   readonly confidence?: number;
   /** Optional review-only nested policies evaluated for low-confidence findings. */
@@ -73,6 +83,8 @@ export class Policy {
   readonly instruction: string;
   /** Message returned when this policy denies a request. */
   readonly message: string;
+  /** Optional evaluator used instead of the pipeline evaluator for this policy. */
+  readonly evaluator: PolicyEvaluatorConfig | undefined;
   /** Optional minimum finding confidence required to deny. */
   readonly confidence: number | undefined;
   /** Optional review-only nested policies evaluated for low-confidence findings. */
@@ -87,6 +99,7 @@ export class Policy {
     this.description = options.description;
     this.instruction = options.instruction;
     this.message = options.message;
+    this.evaluator = options.evaluator;
     this.confidence = options.confidence;
     this.escalation =
       options.escalation === undefined ? undefined : normalizeEscalation(options.escalation);

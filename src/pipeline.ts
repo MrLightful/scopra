@@ -6,14 +6,14 @@ import type {
   PolicyFinding,
   PolicyViolation,
 } from "./evaluation";
-import { isProtecModel, type ProtecModel } from "./model";
+import { isProtecModel } from "./model";
 import { createModelEvaluator, type ModelEvaluatorOptions } from "./model-evaluator";
-import { Policy, type PolicyOptions } from "./policy";
+import { Policy, type PolicyEvaluatorConfig, type PolicyOptions } from "./policy";
 
 /**
  * Evaluator configuration accepted by a policy pipeline.
  */
-export type PolicyPipelineEvaluator = ProtecModel | PolicyEvaluator;
+export type PolicyPipelineEvaluator = PolicyEvaluatorConfig;
 
 /**
  * Configuration for creating a policy pipeline.
@@ -33,17 +33,20 @@ export class PolicyPipeline {
   readonly evaluator: PolicyEvaluator;
   /** Policies normalized to {@link Policy} instances. */
   readonly policies: readonly Policy[];
+  private readonly modelEvaluatorOptions: ModelEvaluatorOptions;
+  private readonly evaluatorOverrides = new Map<PolicyEvaluatorConfig, PolicyEvaluator>();
 
   /**
    * Creates a policy pipeline and normalizes plain policy options to {@link Policy} instances.
    */
   constructor(config: PolicyPipelineConfig) {
+    this.modelEvaluatorOptions = {
+      system: config.system,
+      abortSignal: config.abortSignal,
+      modelOptions: config.modelOptions,
+    };
     this.evaluator = isProtecModel(config.evaluator)
-      ? createModelEvaluator(config.evaluator, {
-          system: config.system,
-          abortSignal: config.abortSignal,
-          modelOptions: config.modelOptions,
-        })
+      ? createModelEvaluator(config.evaluator, this.modelEvaluatorOptions)
       : config.evaluator;
     this.policies = config.policies.map((policy) =>
       policy instanceof Policy ? policy : new Policy(policy),
@@ -88,10 +91,7 @@ export class PolicyPipeline {
     readonly violations: readonly PolicyViolation[];
     readonly escalations: readonly PolicyEscalation[];
   }> {
-    const findings = await this.evaluator({
-      request,
-      policies,
-    });
+    const findings = await this.evaluatePolicyBatches(request, policies);
     const violations: PolicyViolation[] = [];
     const escalations: PolicyEscalation[] = [];
 
@@ -146,6 +146,66 @@ export class PolicyPipeline {
     };
   }
 
+  private async evaluatePolicyBatches(
+    request: EvaluationRequest,
+    policies: readonly Policy[],
+  ): Promise<readonly PolicyFinding[]> {
+    const batches: {
+      readonly evaluator: PolicyEvaluator;
+      readonly policies: Policy[];
+    }[] = [];
+    const batchByEvaluator = new Map<PolicyEvaluator, Policy[]>();
+
+    for (const policy of policies) {
+      const evaluator = this.resolveEvaluator(policy.evaluator);
+      let batch = batchByEvaluator.get(evaluator);
+
+      if (batch === undefined) {
+        batch = [];
+        batchByEvaluator.set(evaluator, batch);
+        batches.push({
+          evaluator,
+          policies: batch,
+        });
+      }
+
+      batch.push(policy);
+    }
+
+    const batchFindings: PolicyFinding[] = [];
+
+    for (const batch of batches) {
+      const findings = await batch.evaluator({
+        request,
+        policies: batch.policies,
+      });
+
+      batchFindings.push(...findings);
+    }
+
+    return orderFindingsByPolicy(batchFindings, policies);
+  }
+
+  private resolveEvaluator(evaluator: PolicyEvaluatorConfig | undefined): PolicyEvaluator {
+    if (evaluator === undefined) {
+      return this.evaluator;
+    }
+
+    const resolved = this.evaluatorOverrides.get(evaluator);
+
+    if (resolved !== undefined) {
+      return resolved;
+    }
+
+    const policyEvaluator = isProtecModel(evaluator)
+      ? createModelEvaluator(evaluator, this.modelEvaluatorOptions)
+      : evaluator;
+
+    this.evaluatorOverrides.set(evaluator, policyEvaluator);
+
+    return policyEvaluator;
+  }
+
   private meetsConfidenceThreshold(finding: PolicyFinding, threshold: number | undefined): boolean {
     if (threshold === undefined) {
       return true;
@@ -157,4 +217,22 @@ export class PolicyPipeline {
   private meetsEscalationThreshold(finding: PolicyFinding, maxConfidence: number): boolean {
     return finding.confidence !== undefined && finding.confidence <= maxConfidence;
   }
+}
+
+function orderFindingsByPolicy(
+  findings: readonly PolicyFinding[],
+  policies: readonly Policy[],
+): readonly PolicyFinding[] {
+  const policyOrder = new Map(policies.map((policy, index) => [policy.id, index]));
+
+  return [...findings].sort((left, right) => {
+    const leftOrder = policyOrder.get(left.policyId);
+    const rightOrder = policyOrder.get(right.policyId);
+
+    if (leftOrder === undefined || rightOrder === undefined) {
+      return 0;
+    }
+
+    return leftOrder - rightOrder;
+  });
 }

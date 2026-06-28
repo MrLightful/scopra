@@ -42,6 +42,7 @@ export type {
   PolicyEscalationMultipleOptions,
   PolicyEscalationOptions,
   PolicyEscalationSingleOptions,
+  PolicyEvaluatorConfig,
   PolicyOptions,
 } from "./policy";
 export { Policy } from "./policy";

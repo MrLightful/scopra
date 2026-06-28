@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { Policy, type PolicyEscalationOptions, type PolicyOptions } from "./index";
+import {
+  Policy,
+  type PolicyEscalationOptions,
+  type PolicyEvaluator,
+  type PolicyOptions,
+} from "./index";
 
 const noSecretsPolicy: PolicyOptions = {
   id: "no-secrets",
@@ -35,9 +40,24 @@ describe("Policy", () => {
       description: "Prevents sensitive data exposure.",
       instruction: "Block exposed API keys and secrets.",
       message: "Do not share secrets.",
+      evaluator: undefined,
       confidence: undefined,
       escalation: undefined,
     });
+  });
+
+  test("creates a policy with an evaluator override", () => {
+    const evaluator: PolicyEvaluator = ({ policies }) =>
+      policies.map((policy) => ({
+        policyId: policy.id,
+        passed: true,
+      }));
+    const policy = new Policy({
+      ...noSecretsPolicy,
+      evaluator,
+    });
+
+    expect(policy.evaluator).toBe(evaluator);
   });
 
   test("creates a policy with denial confidence", () => {
