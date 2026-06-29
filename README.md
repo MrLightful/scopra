@@ -1,3 +1,5 @@
+![Cover](./assets/cover.png)
+
 # protec
 
 Business-rule guardrails for AI agents.
@@ -21,6 +23,10 @@ access to sensitive workflows.
 That is the uncomfortable middle layer Protec is built for: the moment where a
 request sounds urgent, approved, or routine, but should still be checked against
 your product's real business rules before the agent acts.
+
+## Concept
+
+![Concept diagram](./assets/concept.png)
 
 ## Install
 
