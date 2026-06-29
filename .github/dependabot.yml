@@ -1,0 +1,17 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "thursday"
+      time: "07:45"
+      timezone: "Europe/Oslo"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "thursday"
+      time: "07:45"
+      timezone: "Europe/Oslo"
