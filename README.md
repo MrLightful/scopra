@@ -82,17 +82,17 @@ Protec ships with policy presets for common boundaries:
 
 | Policy | What it protects |
 | --- | --- |
-| `NoSecretsPolicy` | Blocks exposed API keys, credentials, tokens, and private keys. |
+| `AgentScopePolicy` | Keeps the agent inside its configured task or business scope. |
+| `SocialEngineeringPolicy` | Blocks coercive attempts to pressure the agent around guardrails. |
+| `PromptInjectionPolicy` | Blocks attempts to override instructions or leak hidden context. |
+| `RegulatedAdvicePolicy` | Blocks personalized advice in regulated domains. |
 | `PersonalDataPolicy` | Blocks unsafe exposure of sensitive personal data. |
 | `CopyrightPolicy` | Blocks substantial reproduction of protected content. |
-| `PromptInjectionPolicy` | Blocks attempts to override instructions or leak hidden context. |
-| `SocialEngineeringPolicy` | Blocks coercive attempts to pressure the agent around guardrails. |
-| `RegulatedAdvicePolicy` | Blocks personalized advice in regulated domains. |
 | `MedicalAdvicePolicy` | Blocks patient-specific diagnosis, treatment, or medication guidance. |
 | `LegalAdvicePolicy` | Blocks legal conclusions or counsel for a specific situation. |
 | `FinancialAdvicePolicy` | Blocks personalized investment, tax, insurance, or planning directives. |
 | `UnsafeToolUsePolicy` | Blocks destructive, unauthorized, or risky tool actions. |
-| `AgentScopePolicy` | Keeps the agent inside its configured task or business scope. |
+| `NoSecretsPolicy` | Blocks exposed API keys, credentials, tokens, and private keys. |
 
 ## Cost
 
