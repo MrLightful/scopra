@@ -1,12 +1,18 @@
 ![Cover](./assets/cover.png)
 
-# protec
+## About
 
 Business-rule guardrails for AI agents.
 
 Protec is a TypeScript SDK that runs alongside your main AI agent pipeline,
 evaluating user input, model output, and tool calls against your business rules
 before your app continues, blocks, or routes the request for review.
+
+## Install
+
+```sh
+bun add protec
+```
 
 ## Why Protec exists
 
@@ -27,19 +33,6 @@ your product's real business rules before the agent acts.
 ## Concept
 
 ![Concept diagram](./assets/concept.png)
-
-## Install
-
-```sh
-bun add protec
-```
-
-Using the AI SDK adapter? Install the provider package you want to evaluate
-with:
-
-```sh
-bun add @ai-sdk/openai
-```
 
 ## Usage
 
