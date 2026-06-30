@@ -9,11 +9,17 @@
     "start": "next start"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.4",
+    "@ai-sdk/google": "^4.0.3",
+    "@ai-sdk/openai": "^4.0.4",
+    "ai": "^7.0.9",
+    "lucide-react": "^0.561.0",
     "next": "^15.5.19",
     "nextra": "4.5.1",
     "nextra-theme-docs": "4.5.1",
     "react": "^19.2.3",
-    "react-dom": "^19.2.3"
+    "react-dom": "^19.2.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

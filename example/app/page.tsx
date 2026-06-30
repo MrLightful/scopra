@@ -371,9 +371,7 @@ function ChatBubble({ message }: { readonly message: ChatMessage }) {
         className={cn(
           "max-w-[min(700px,86%)] rounded-lg px-4 py-3 text-sm leading-6",
           isUser && "bg-white text-stone-950",
-          !isUser &&
-            !message.blocked &&
-            "border border-white/10 bg-stone-950/55 text-stone-100",
+          !isUser && !message.blocked && "border border-white/10 bg-stone-950/55 text-stone-100",
           message.blocked && "border border-rose-300/25 bg-rose-400/10 text-rose-50",
         )}
       >
@@ -445,9 +443,7 @@ function PolicyInspector({
             <span className="text-xs font-medium uppercase text-stone-500">Decision</span>
             <DecisionBadge result={result} isSending={isSending} />
           </div>
-          <p className="text-sm leading-6 text-stone-300">
-            {getDecisionCopy(result, isSending)}
-          </p>
+          <p className="text-sm leading-6 text-stone-300">{getDecisionCopy(result, isSending)}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
@@ -512,9 +508,7 @@ function TimingComparison({
 
   return (
     <div>
-      <div className="mb-2 text-xs font-medium uppercase text-stone-500">
-        Policy vs generation
-      </div>
+      <div className="mb-2 text-xs font-medium uppercase text-stone-500">Policy vs generation</div>
       <div className="space-y-3 rounded-lg border border-white/10 bg-stone-950/45 p-3">
         <TimingBar
           label="Policy evaluation"
@@ -529,7 +523,8 @@ function TimingComparison({
           width={chatMs === undefined ? 0 : Math.max((chatMs / maxMs) * 100, 6)}
         />
         <p className="text-xs leading-5 text-stone-500">
-          Both start together. A blocked prompt aborts generation before a final response time exists.
+          Both start together. A blocked prompt aborts generation before a final response time
+          exists.
         </p>
       </div>
     </div>
