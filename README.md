@@ -11,7 +11,7 @@ before your app continues, blocks, or routes the request for review.
 ## Install
 
 ```sh
-bun add protec
+npm add protec
 ```
 
 ## Why Protec exists
