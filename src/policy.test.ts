@@ -11,7 +11,7 @@ const noSecretsPolicy: PolicyOptions = {
   name: "No secrets",
   description: "Prevents sensitive data exposure.",
   instruction: "Block exposed API keys and secrets.",
-  message: "Do not share secrets.",
+  denial: "Do not share secrets.",
 };
 
 const stayInScopePolicy: PolicyOptions = {
@@ -19,7 +19,7 @@ const stayInScopePolicy: PolicyOptions = {
   name: "Stay in scope",
   description: "Keeps the assistant focused on the product.",
   instruction: "Block requests outside the assistant's intended scope.",
-  message: "That request is outside this assistant's scope.",
+  denial: "That request is outside this assistant's scope.",
 };
 
 const highRiskSecretsPolicy: PolicyOptions = {
@@ -27,7 +27,7 @@ const highRiskSecretsPolicy: PolicyOptions = {
   name: "High-risk secrets",
   description: "Prevents exposed production secrets.",
   instruction: "Block exposed production API keys and credentials.",
-  message: "Do not share production secrets.",
+  denial: "Do not share production secrets.",
 };
 
 describe("Policy", () => {
@@ -39,7 +39,7 @@ describe("Policy", () => {
       name: "No secrets",
       description: "Prevents sensitive data exposure.",
       instruction: "Block exposed API keys and secrets.",
-      message: "Do not share secrets.",
+      denial: "Do not share secrets.",
       evaluator: undefined,
       confidence: undefined,
       escalation: undefined,

@@ -40,13 +40,13 @@ Most built-in policies accept the same options.
 
 ```ts
 new PromptInjectionPolicy({
-  message: "That request attempts to bypass the agent's instructions.",
+  denial: "That request attempts to bypass the agent's instructions.",
   confidence: 0.75,
   evaluator: customEvaluator,
 });
 ```
 
-Use `message` to tune user-facing denial copy, `confidence` to require a minimum failed-finding confidence, and `evaluator` when a policy should use a different evaluator from the rest of the pipeline.
+Use `denial` to tune user-facing denial copy, `confidence` to require a minimum failed-finding confidence, and `evaluator` when a policy should use a different evaluator from the rest of the pipeline.
 
 ## Scope Policy
 
@@ -58,4 +58,3 @@ new AgentScopePolicy({
     "Support subscription billing, plan changes, invoice questions, and refund requests under the published refund policy.",
 });
 ```
-

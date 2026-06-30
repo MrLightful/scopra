@@ -8,3 +8,4 @@ docs/node_modules
 example/.next
 example/node_modules
 example/tsconfig.tsbuildinfo
+docs/public/_pagefind

@@ -135,7 +135,7 @@ export class PolicyPipeline {
       violations.push({
         policy,
         finding,
-        message: policy.message,
+        denial: policy.denial,
       });
     }
 

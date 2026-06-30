@@ -13,7 +13,7 @@ const noSecretsPolicy: PolicyOptions = {
   name: "No secrets",
   description: "Prevents sensitive data exposure.",
   instruction: "Block exposed API keys and secrets.",
-  message: "Do not share secrets.",
+  denial: "Do not share secrets.",
 };
 
 const stayInScopePolicy: PolicyOptions = {
@@ -21,7 +21,7 @@ const stayInScopePolicy: PolicyOptions = {
   name: "Stay in scope",
   description: "Keeps the assistant focused on the product.",
   instruction: "Block requests outside the assistant's intended scope.",
-  message: "That request is outside this assistant's scope.",
+  denial: "That request is outside this assistant's scope.",
 };
 
 const highRiskSecretsPolicy: PolicyOptions = {
@@ -29,7 +29,7 @@ const highRiskSecretsPolicy: PolicyOptions = {
   name: "High-risk secrets",
   description: "Prevents exposed production secrets.",
   instruction: "Block exposed production API keys and credentials.",
-  message: "Do not share production secrets.",
+  denial: "Do not share production secrets.",
 };
 
 describe("PolicyPipeline", () => {
@@ -237,7 +237,7 @@ describe("PolicyPipeline", () => {
           id: "possible-secrets",
           name: "Possible secrets",
           instruction: "Escalate possible secrets for detailed review.",
-          message: "Review possible secrets.",
+          denial: "Review possible secrets.",
           escalation: {
             policy: {
               ...highRiskSecretsPolicy,
@@ -335,7 +335,7 @@ describe("PolicyPipeline", () => {
         reason: "The output contained an API key.",
         confidence: 0.92,
       },
-      message: "Do not share secrets.",
+      denial: "Do not share secrets.",
     });
   });
 
@@ -435,7 +435,7 @@ describe("PolicyPipeline", () => {
           id: "possible-secrets",
           name: "Possible secrets",
           instruction: "Escalate possible secrets for detailed review.",
-          message: "Review possible secrets.",
+          denial: "Review possible secrets.",
           escalation: {
             policy: highRiskSecretsPolicy,
             maxConfidence: 0.5,
@@ -453,7 +453,7 @@ describe("PolicyPipeline", () => {
     expect(decision.allowed).toBe(false);
 
     if (!decision.allowed) {
-      expect(decision.violations[0]?.message).toBe("Do not share production secrets.");
+      expect(decision.violations[0]?.denial).toBe("Do not share production secrets.");
     }
 
     expect(decision.findings).toEqual([
@@ -498,7 +498,7 @@ describe("PolicyPipeline", () => {
           policy: {
             id: "high-risk-secrets",
           },
-          message: "Do not share production secrets.",
+          denial: "Do not share production secrets.",
         },
       ],
     });
@@ -531,7 +531,7 @@ describe("PolicyPipeline", () => {
           id: "possible-problem",
           name: "Possible problem",
           instruction: "Escalate possible problems for detailed review.",
-          message: "Review possible problems.",
+          denial: "Review possible problems.",
           escalation,
         },
       ],
@@ -562,7 +562,7 @@ describe("PolicyPipeline", () => {
             id: "possible-problem",
             name: "Possible problem",
             instruction: "Escalate possible problems for detailed review.",
-            message: "Review possible problems.",
+            denial: "Review possible problems.",
             escalation,
           }),
           finding: {
@@ -607,7 +607,7 @@ describe("PolicyPipeline", () => {
           id: "possible-secrets",
           name: "Possible secrets",
           instruction: "Escalate possible secrets for detailed review.",
-          message: "Review possible secrets.",
+          denial: "Review possible secrets.",
           escalation: {
             policy: highRiskSecretsPolicy,
             maxConfidence: 0.4,
@@ -658,7 +658,7 @@ describe("PolicyPipeline", () => {
           id: "possible-secrets",
           name: "Possible secrets",
           instruction: "Escalate possible secrets for detailed review.",
-          message: "Review possible secrets.",
+          denial: "Review possible secrets.",
           escalation: {
             policy: highRiskSecretsPolicy,
             maxConfidence: 0.4,
@@ -717,7 +717,7 @@ describe("PolicyPipeline", () => {
           id: "possible-secrets",
           name: "Possible secrets",
           instruction: "Escalate possible secrets for detailed review.",
-          message: "Review possible secrets.",
+          denial: "Review possible secrets.",
           escalation: {
             policy: highRiskSecretsPolicy,
             maxConfidence: 0.4,
@@ -770,7 +770,7 @@ describe("PolicyPipeline", () => {
           id: "possible-secrets",
           name: "Possible secrets",
           instruction: "Escalate possible secrets for detailed review.",
-          message: "Review possible secrets.",
+          denial: "Review possible secrets.",
           escalation: {
             policy: highRiskSecretsPolicy,
             maxConfidence: 0.95,
@@ -789,7 +789,7 @@ describe("PolicyPipeline", () => {
     expect(decision.escalations).toHaveLength(1);
   });
 
-  test("uses the policy denial message", async () => {
+  test("uses the policy denial", async () => {
     const pipeline = new PolicyPipeline({
       evaluator: () => [
         {
@@ -808,7 +808,7 @@ describe("PolicyPipeline", () => {
     expect(decision.allowed).toBe(false);
 
     if (!decision.allowed) {
-      expect(decision.violations[0]?.message).toBe(
+      expect(decision.violations[0]?.denial).toBe(
         "That request is outside this assistant's scope.",
       );
     }
