@@ -30,10 +30,10 @@ export type {
   ToolEvaluationRequest,
 } from "./evaluation";
 export type {
-  ProtecModel,
-  ProtecModelOptions,
-  ProtecObjectInput,
-  ProtecTextInput,
+  ScopraModel,
+  ScopraModelOptions,
+  ScopraObjectInput,
+  ScopraTextInput,
 } from "./model";
 export type { ModelEvaluatorOptions } from "./model-evaluator";
 export type { PolicyPipelineConfig, PolicyPipelineEvaluator } from "./pipeline";

@@ -1,10 +1,10 @@
 import type { PolicyEvaluator } from "./evaluation";
-import type { ProtecModel } from "./model";
+import type { ScopraModel } from "./model";
 
 /**
  * Evaluator configuration accepted by policies and policy pipelines.
  */
-export type PolicyEvaluatorConfig = ProtecModel | PolicyEvaluator;
+export type PolicyEvaluatorConfig = ScopraModel | PolicyEvaluator;
 
 /**
  * Options for configuring escalation to one nested policy.

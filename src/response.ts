@@ -1,5 +1,5 @@
 import type { DeniedPolicyDecision } from "./evaluation";
-import type { ProtecModel, ProtecModelOptions } from "./model";
+import type { ScopraModel, ScopraModelOptions } from "./model";
 
 const DEFAULT_SYSTEM = [
   "You write user-facing response text for an AI application when a policy denies a request.",
@@ -14,7 +14,7 @@ const DEFAULT_SYSTEM = [
  * Options for generating user-facing response text from a denied policy decision.
  */
 export type GenerateViolationResponseOptions = {
-  /** Instructions sent to the model instead of Protec's default response-writing instructions. */
+  /** Instructions sent to the model instead of Scopra's default response-writing instructions. */
   readonly system?: string;
   /** App-specific response guidance included with the violation context. */
   readonly instructions?: string;
@@ -23,14 +23,14 @@ export type GenerateViolationResponseOptions = {
   /** Optional cancellation signal for model requests. */
   readonly abortSignal?: AbortSignal;
   /** SDK-specific generation options passed to the configured model adapter. */
-  readonly modelOptions?: ProtecModelOptions;
+  readonly modelOptions?: ScopraModelOptions;
 };
 
 /**
  * Generates user-facing response text for a denied policy decision.
  */
 export async function generateViolationResponse(
-  model: ProtecModel,
+  model: ScopraModel,
   decision: DeniedPolicyDecision,
   options: GenerateViolationResponseOptions = {},
 ): Promise<string> {

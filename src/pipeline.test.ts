@@ -4,8 +4,8 @@ import {
   type PolicyEvaluator,
   type PolicyOptions,
   PolicyPipeline,
-  type ProtecModel,
-  type ProtecObjectInput,
+  type ScopraModel,
+  type ScopraObjectInput,
 } from "./index";
 
 const noSecretsPolicy: PolicyOptions = {
@@ -918,12 +918,12 @@ describe("PolicyPipeline", () => {
   });
 });
 
-type TestModel = ProtecModel & {
-  readonly generateObjectCalls: ProtecObjectInput[];
+type TestModel = ScopraModel & {
+  readonly generateObjectCalls: ScopraObjectInput[];
 };
 
 function createObjectModel(object: unknown): TestModel {
-  const generateObjectCalls: ProtecObjectInput[] = [];
+  const generateObjectCalls: ScopraObjectInput[] = [];
 
   return {
     generateObjectCalls,

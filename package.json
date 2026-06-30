@@ -1,5 +1,5 @@
 {
-  "name": "protec",
+  "name": "scopra",
   "version": "0.0.1",
   "description": "Developer-first TypeScript policy enforcement for AI applications.",
   "type": "module",
@@ -41,13 +41,13 @@
     "sdk",
     "typescript"
   ],
-  "homepage": "https://github.com/MrLightful/protec#readme",
+  "homepage": "https://github.com/MrLightful/scopra#readme",
   "bugs": {
-    "url": "https://github.com/MrLightful/protec/issues"
+    "url": "https://github.com/MrLightful/scopra/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MrLightful/protec.git"
+    "url": "git+https://github.com/MrLightful/scopra.git"
   },
   "license": "MIT",
   "publishConfig": {

@@ -1,9 +1,9 @@
-import type { ProtecModel } from "./model";
+import type { ScopraModel } from "./model";
 
 /**
- * Adapts a Vercel AI SDK language model to Protec's SDK-neutral model interface.
+ * Adapts a Vercel AI SDK language model to Scopra's SDK-neutral model interface.
  */
-export function vercel(model: unknown): ProtecModel {
+export function vercel(model: unknown): ScopraModel {
   return {
     async generateText(input) {
       const { generateText } = await import("ai");

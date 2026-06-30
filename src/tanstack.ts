@@ -1,9 +1,9 @@
-import type { ProtecModel } from "./model";
+import type { ScopraModel } from "./model";
 
 /**
- * Adapts a TanStack AI text adapter to Protec's SDK-neutral model interface.
+ * Adapts a TanStack AI text adapter to Scopra's SDK-neutral model interface.
  */
-export function tanstack(adapter: unknown): ProtecModel {
+export function tanstack(adapter: unknown): ScopraModel {
   return {
     async generateText(input) {
       const { chat } = await import("@tanstack/ai");

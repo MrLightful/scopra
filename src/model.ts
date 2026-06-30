@@ -3,12 +3,12 @@ import type { z } from "zod";
 /**
  * Options passed through to the underlying SDK adapter.
  */
-export type ProtecModelOptions = Record<string, unknown>;
+export type ScopraModelOptions = Record<string, unknown>;
 
 /**
- * Input for text generation through a Protec model adapter.
+ * Input for text generation through a Scopra model adapter.
  */
-export type ProtecTextInput = {
+export type ScopraTextInput = {
   /** System instructions for the generation request. */
   readonly system: string;
   /** User prompt for the generation request. */
@@ -16,13 +16,13 @@ export type ProtecTextInput = {
   /** Optional cancellation signal. */
   readonly abortSignal?: AbortSignal | undefined;
   /** SDK-specific generation options. */
-  readonly modelOptions?: ProtecModelOptions | undefined;
+  readonly modelOptions?: ScopraModelOptions | undefined;
 };
 
 /**
- * Input for structured object generation through a Protec model adapter.
+ * Input for structured object generation through a Scopra model adapter.
  */
-export type ProtecObjectInput = ProtecTextInput & {
+export type ScopraObjectInput = ScopraTextInput & {
   /** Schema the returned object must satisfy. */
   readonly schema: z.ZodType;
   /** Optional schema name for SDKs that support it. */
@@ -32,16 +32,16 @@ export type ProtecObjectInput = ProtecTextInput & {
 };
 
 /**
- * SDK-neutral model adapter used by Protec's LLM-backed workflows.
+ * SDK-neutral model adapter used by Scopra's LLM-backed workflows.
  */
-export type ProtecModel = {
-  /** Generates text from Protec-owned instructions and prompt content. */
-  readonly generateText: (input: ProtecTextInput) => Promise<string>;
-  /** Generates a structured object from Protec-owned instructions, prompt, and schema. */
-  readonly generateObject: (input: ProtecObjectInput) => Promise<unknown>;
+export type ScopraModel = {
+  /** Generates text from Scopra-owned instructions and prompt content. */
+  readonly generateText: (input: ScopraTextInput) => Promise<string>;
+  /** Generates a structured object from Scopra-owned instructions, prompt, and schema. */
+  readonly generateObject: (input: ScopraObjectInput) => Promise<unknown>;
 };
 
-export function isProtecModel(value: unknown): value is ProtecModel {
+export function isScopraModel(value: unknown): value is ScopraModel {
   return (
     typeof value === "object" &&
     value !== null &&

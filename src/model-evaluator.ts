@@ -1,6 +1,6 @@
 import { z } from "zod";
 import type { EvaluationRequest, PolicyEvaluator, PolicyFinding } from "./evaluation";
-import type { ProtecModel, ProtecModelOptions } from "./model";
+import type { ScopraModel, ScopraModelOptions } from "./model";
 import type { Policy } from "./policy";
 
 const DEFAULT_SYSTEM = [
@@ -28,23 +28,23 @@ const evaluationSchema = z.object({
  * Options for model-backed policy evaluation.
  */
 export type ModelEvaluatorOptions = {
-  /** Instructions sent to the model instead of Protec's default evaluator instructions. */
+  /** Instructions sent to the model instead of Scopra's default evaluator instructions. */
   readonly system?: string | undefined;
   /** Optional cancellation signal for model requests. */
   readonly abortSignal?: AbortSignal | undefined;
   /** SDK-specific generation options passed to the configured model adapter. */
-  readonly modelOptions?: ProtecModelOptions | undefined;
+  readonly modelOptions?: ScopraModelOptions | undefined;
 };
 
 export function createModelEvaluator(
-  model: ProtecModel,
+  model: ScopraModel,
   options: ModelEvaluatorOptions = {},
 ): PolicyEvaluator {
   return async ({ request, policies }) => evaluateWithModel(model, request, policies, options);
 }
 
 async function evaluateWithModel(
-  model: ProtecModel,
+  model: ScopraModel,
   request: EvaluationRequest,
   policies: readonly Policy[],
   options: ModelEvaluatorOptions,
@@ -54,7 +54,7 @@ async function evaluateWithModel(
     prompt: buildPrompt(request, policies),
     schema: evaluationSchema,
     schemaName: "PolicyEvaluation",
-    schemaDescription: "Policy findings for a Protec evaluation request.",
+    schemaDescription: "Policy findings for a Scopra evaluation request.",
     abortSignal: options.abortSignal,
     modelOptions: options.modelOptions,
   });

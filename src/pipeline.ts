@@ -6,7 +6,7 @@ import type {
   PolicyFinding,
   PolicyViolation,
 } from "./evaluation";
-import { isProtecModel } from "./model";
+import { isScopraModel } from "./model";
 import { createModelEvaluator, type ModelEvaluatorOptions } from "./model-evaluator";
 import { Policy, type PolicyEvaluatorConfig, type PolicyOptions } from "./policy";
 
@@ -45,7 +45,7 @@ export class PolicyPipeline {
       abortSignal: config.abortSignal,
       modelOptions: config.modelOptions,
     };
-    this.evaluator = isProtecModel(config.evaluator)
+    this.evaluator = isScopraModel(config.evaluator)
       ? createModelEvaluator(config.evaluator, this.modelEvaluatorOptions)
       : config.evaluator;
     this.policies = config.policies.map((policy) =>
@@ -197,7 +197,7 @@ export class PolicyPipeline {
       return resolved;
     }
 
-    const policyEvaluator = isProtecModel(evaluator)
+    const policyEvaluator = isScopraModel(evaluator)
       ? createModelEvaluator(evaluator, this.modelEvaluatorOptions)
       : evaluator;
 
