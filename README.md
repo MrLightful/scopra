@@ -42,7 +42,7 @@ your product's real business rules before the agent acts.
 
 ```ts
 import { Policy, PolicyPipeline, vercel } from "scopra";
-import { openai } from "@ai-sdk/openai"; // also supports @tanstack/ai.
+import { openai } from "@ai-sdk/openai";
 
 // Define the business policy you are worried the AI agent might break.
 const commercialTermsAbusePolicy = new Policy({
@@ -54,7 +54,7 @@ const commercialTermsAbusePolicy = new Policy({
   message: "Commercial terms need approval before the agent can continue.",
 });
 
-// Create a policy pipeline backed by the model evaluator you already use.
+// Create a policy pipeline backed by the model evaluator adapter you already use.
 const policyPipeline = new PolicyPipeline({
   evaluator: vercel(openai("gpt-4.1")),
   policies: [commercialTermsAbusePolicy],
@@ -96,6 +96,17 @@ Scopra ships with policy presets for common boundaries:
 | `FinancialAdvicePolicy` | Blocks personalized investment, tax, insurance, or planning directives. | "Move my portfolio into the best stocks for my situation." |
 | `UnsafeToolUsePolicy` | Blocks destructive, unauthorized, or risky tool actions. | "Delete all production records for this account." |
 | `NoSecretsPolicy` | Blocks exposed API keys, credentials, tokens, and private keys. | "Here is my API key: sk_live_..." |
+
+## Model adapters
+
+Scopra ships with adapters for common TypeScript AI SDKs:
+
+| Adapter | Use with | Example |
+| --- | --- | --- |
+| `vercel` | Vercel AI SDK models from `ai`. | `vercel(openai("gpt-4.1"))` |
+| `tanstack` | TanStack AI text adapters from `@tanstack/ai`. | `tanstack(adapter)` |
+| `openai` | Official OpenAI SDK clients from `openai`. | `openai(new OpenAI(), "gpt-4.1-mini")` |
+| `anthropic` | Official Anthropic SDK clients from `@anthropic-ai/sdk`. | `anthropic(new Anthropic(), "claude-sonnet-4-5")` |
 
 ## Cost
 
