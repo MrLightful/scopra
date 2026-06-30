@@ -20,10 +20,12 @@
   "sideEffects": false,
   "scripts": {
     "build": "bun run clean && tsc -p tsconfig.build.json",
-    "check": "bun run typecheck && biome check .",
+    "check": "bun run typecheck && bun run lint && bun run format:check",
     "ci": "bun run check && bun test && bun run build && bun run pack:dry-run",
     "clean": "rm -rf dist",
     "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
     "pack:dry-run": "bun run build && npm pack --dry-run",
     "test": "bun test",
     "typecheck": "tsc -p tsconfig.json --noEmit",
