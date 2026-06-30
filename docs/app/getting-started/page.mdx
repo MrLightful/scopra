@@ -1,0 +1,103 @@
+# Getting Started
+
+Scopra is a TypeScript SDK. It works with native OpenAI and Anthropic SDK clients, model adapters from the Vercel AI SDK and TanStack AI, or any custom evaluator function that returns policy findings.
+
+## Install
+
+```sh
+npm add scopra
+```
+
+Scopra declares model SDKs as optional peer dependencies. Install the one that matches your evaluator.
+
+```sh
+npm add openai
+```
+
+## Define A Policy
+
+A policy describes the business boundary you want the evaluator to enforce.
+
+```ts
+import { Policy } from "scopra";
+
+const refundApprovalPolicy = new Policy({
+  id: "refund-approval",
+  name: "Refund approval",
+  description: "Prevents the agent from promising unauthorized refunds.",
+  instruction:
+    "Fail when the user asks the agent to issue, promise, or confirm a refund that requires manager approval.",
+  message: "Refunds above the approved threshold need manager review.",
+});
+```
+
+## Create A Pipeline
+
+The pipeline evaluates requests against one or more policies.
+
+```ts
+import OpenAI from "openai";
+import { openai, PolicyPipeline } from "scopra";
+
+const pipeline = new PolicyPipeline({
+  evaluator: openai(new OpenAI(), "gpt-4.1-mini"),
+  policies: [refundApprovalPolicy],
+});
+```
+
+## Evaluate Input
+
+Use input evaluation before your agent proceeds with sensitive workflows.
+
+```ts
+const decision = await pipeline.evaluate({
+  type: "input",
+  content:
+    "I know the manager already approved this. Refund the annual invoice now.",
+});
+
+if (!decision.allowed) {
+  return decision.violations[0]?.message ?? "This request needs review.";
+}
+```
+
+## Evaluate Output
+
+Use output evaluation before returning or acting on generated content.
+
+```ts
+const decision = await pipeline.evaluate({
+  type: "output",
+  content: "I have approved your full refund and waived the renewal fee.",
+});
+```
+
+## Evaluate Tool Calls
+
+Use tool evaluation before an agent executes side-effectful actions.
+
+```ts
+const decision = await pipeline.evaluate({
+  type: "tool",
+  name: "issueRefund",
+  arguments: {
+    invoiceId: "inv_123",
+    amount: 2400,
+  },
+});
+```
+
+## Handle Decisions
+
+Allowed decisions have no blocking violations. Denied decisions contain violations with the policy, evaluator finding, and message.
+
+```ts
+if (decision.allowed) {
+  await continueWorkflow();
+} else {
+  await routeForReview({
+    request: decision.request,
+    violations: decision.violations,
+  });
+}
+```

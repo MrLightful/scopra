@@ -1,0 +1,127 @@
+# API Reference
+
+This is a concise reference for the public exports from `scopra`.
+
+## Policy
+
+`Policy` defines a business rule that can be evaluated by a `PolicyPipeline`.
+
+```ts
+new Policy({
+  id: "policy-id",
+  name: "Policy name",
+  description: "Optional summary.",
+  instruction: "Evaluator instructions.",
+  message: "Denial message.",
+  evaluator,
+  confidence: 0.8,
+  escalation,
+});
+```
+
+### PolicyOptions
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `id` | `string` | Yes | Stable identifier used to match evaluator findings. |
+| `name` | `string` | Yes | Human-readable policy name. |
+| `description` | `string` | No | Summary of what the policy protects. |
+| `instruction` | `string` | Yes | Instruction passed to the evaluator. |
+| `message` | `string` | Yes | Message returned when the policy denies. |
+| `evaluator` | `ScopraModel \| PolicyEvaluator` | No | Per-policy evaluator override. |
+| `confidence` | `number` | No | Minimum failed-finding confidence required to deny. |
+| `escalation` | `PolicyEscalationOptions` | No | Review-only nested policy evaluation for low-confidence findings. |
+
+## PolicyPipeline
+
+`PolicyPipeline` evaluates requests against configured policies.
+
+```ts
+const pipeline = new PolicyPipeline({
+  evaluator,
+  policies,
+  system,
+  abortSignal,
+  modelOptions,
+});
+
+const decision = await pipeline.evaluate(request);
+```
+
+## Evaluation Requests
+
+```ts
+type EvaluationRequest =
+  | { type: "input"; content: string }
+  | { type: "output"; content: string }
+  | { type: "tool"; name: string; arguments: Record<string, unknown> };
+```
+
+## Decisions
+
+`PolicyDecision` is a discriminated union. Check `allowed` before reading blocking violations.
+
+```ts
+if (decision.allowed) {
+  decision.violations; // []
+} else {
+  decision.violations; // PolicyViolation[]
+}
+```
+
+## Evaluator Types
+
+```ts
+type PolicyEvaluator = (
+  context: PolicyEvaluatorContext,
+) => readonly PolicyFinding[] | Promise<readonly PolicyFinding[]>;
+
+type PolicyFinding = {
+  policyId: string;
+  passed: boolean;
+  reason?: string;
+  confidence?: number;
+};
+```
+
+## Model Adapters
+
+| Export | Description |
+| --- | --- |
+| `openai(client, model)` | Adapts the official OpenAI SDK client. |
+| `anthropic(client, model, options?)` | Adapts the official Anthropic SDK client. |
+| `vercel(model)` | Adapts a Vercel AI SDK language model. |
+| `tanstack(adapter)` | Adapts a TanStack AI text adapter. |
+
+`anthropic(...)` accepts `AnthropicAdapterOptions` with an optional `maxTokens` default for requests where `modelOptions.max_tokens` is not provided.
+
+## Built-In Policy Classes
+
+| Export | Constructor options |
+| --- | --- |
+| `AgentScopePolicy` | `AgentScopePolicyOptions` with required `scope`. |
+| `CopyrightPolicy` | `CommonPolicyOptions` |
+| `FinancialAdvicePolicy` | `CommonPolicyOptions` |
+| `LegalAdvicePolicy` | `CommonPolicyOptions` |
+| `MedicalAdvicePolicy` | `CommonPolicyOptions` |
+| `NoSecretsPolicy` | `CommonPolicyOptions` |
+| `PersonalDataPolicy` | `CommonPolicyOptions` |
+| `PromptInjectionPolicy` | `CommonPolicyOptions` |
+| `RegulatedAdvicePolicy` | `CommonPolicyOptions` |
+| `SocialEngineeringPolicy` | `CommonPolicyOptions` |
+| `UnsafeToolUsePolicy` | `CommonPolicyOptions` |
+
+## generateViolationResponse
+
+`generateViolationResponse(model, decision, options)` creates user-facing denial copy from a denied decision.
+
+See the [Violation Responses guide](/generate-violation-response) for usage patterns and option guidance.
+
+```ts
+const response = await generateViolationResponse(model, decision, {
+  locale: "en-US",
+  instructions: "Use a concise support tone.",
+  abortSignal,
+  modelOptions,
+});
+```

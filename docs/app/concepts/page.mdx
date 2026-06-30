@@ -1,0 +1,92 @@
+# Concepts
+
+Scopra separates policy definition from policy evaluation. Your application owns the rules, while an evaluator decides whether a request passes those rules.
+
+## Policies
+
+A `Policy` is a stable rule definition. It has an `id`, `name`, `instruction`, and denial `message`.
+
+```ts
+const policy = new Policy({
+  id: "contract-terms",
+  name: "Contract terms",
+  instruction:
+    "Fail when the agent offers custom contract terms without approval.",
+  message: "Custom contract terms need approval.",
+});
+```
+
+## Evaluators
+
+An evaluator receives the current request and the policies to check. Scopra can create evaluators from model adapters, or you can provide your own function.
+
+```ts
+const evaluator = async ({ request, policies }) => {
+  return policies.map((policy) => ({
+    policyId: policy.id,
+    passed: !String(request.content ?? "").includes("override approval"),
+    confidence: 0.9,
+  }));
+};
+```
+
+## Findings And Violations
+
+Evaluators return `PolicyFinding` objects. The pipeline turns failed findings into blocking `PolicyViolation` objects only when the finding matches a configured policy and passes any confidence threshold.
+
+```ts
+type PolicyFinding = {
+  policyId: string;
+  passed: boolean;
+  reason?: string;
+  confidence?: number;
+};
+```
+
+## Confidence Thresholds
+
+Set `confidence` on a policy when a failed finding should only deny above a minimum confidence score.
+
+```ts
+new Policy({
+  id: "high-confidence-only",
+  name: "High confidence only",
+  instruction: "Fail on clear policy abuse.",
+  message: "This request needs review.",
+  confidence: 0.8,
+});
+```
+
+## Escalations
+
+Escalations let a broad policy trigger more detailed review when confidence is low. The parent policy becomes review-only when escalation is configured; nested policies provide any blocking violations.
+
+```ts
+new Policy({
+  id: "commercial-risk",
+  name: "Commercial risk",
+  instruction: "Fail when a request may involve unauthorized commercial terms.",
+  message: "Commercial terms need review.",
+  escalation: {
+    maxConfidence: 0.65,
+    policies: [
+      {
+        id: "pricing-exception",
+        name: "Pricing exception",
+        instruction: "Fail on unauthorized discounts or pricing exceptions.",
+        message: "Pricing exceptions need approval.",
+      },
+    ],
+  },
+});
+```
+
+## Pipeline Flow
+
+1. Your app creates a `PolicyPipeline`.
+2. The pipeline batches policies by evaluator.
+3. Each evaluator returns findings.
+4. The pipeline orders findings by policy order.
+5. Matching failed findings become violations when thresholds allow.
+6. The final decision is either allowed or denied.
+

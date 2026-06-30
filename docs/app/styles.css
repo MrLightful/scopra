@@ -1,0 +1,37 @@
+:root {
+  --scopra-accent: #0f766e;
+}
+
+.scopra-hero {
+  display: grid;
+  gap: 1.5rem;
+  margin: 1rem 0 2rem;
+}
+
+.scopra-hero img,
+.scopra-concept img {
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 8px;
+}
+
+.scopra-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin: 1.5rem 0;
+}
+
+.scopra-card {
+  border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.scopra-card h3 {
+  font-size: 1rem;
+  margin: 0 0 0.35rem;
+}
+
+.scopra-card p {
+  margin: 0;
+}
