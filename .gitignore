@@ -5,3 +5,4 @@ coverage
 *.tgz
 docs/.next
 docs/node_modules
+docs/public/_pagefind
