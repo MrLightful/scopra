@@ -1,5 +1,0 @@
----
-"protec": patch
----
-
-Initial release
