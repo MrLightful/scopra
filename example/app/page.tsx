@@ -458,10 +458,12 @@ function PolicyInspector({
           />
           <Metric
             icon={<Clock3 className="h-3.5 w-3.5" />}
-            label="Timing"
-            value={getTimingCopy(result, isSending)}
+            label="Total"
+            value={getTotalTimingCopy(result, isSending)}
           />
         </div>
+
+        <TimingComparison result={result} isSending={isSending} />
 
         <div>
           <div className="mb-2 text-xs font-medium uppercase text-stone-500">Model</div>
@@ -494,6 +496,74 @@ function PolicyInspector({
         </div>
       </div>
     </aside>
+  );
+}
+
+function TimingComparison({
+  result,
+  isSending,
+}: {
+  readonly result: ChatResult | null;
+  readonly isSending: boolean;
+}) {
+  const policyMs = result?.timings.policyMs;
+  const chatMs = result?.timings.chatMs;
+  const maxMs = Math.max(policyMs ?? 0, chatMs ?? 0, 1);
+
+  return (
+    <div>
+      <div className="mb-2 text-xs font-medium uppercase text-stone-500">
+        Policy vs generation
+      </div>
+      <div className="space-y-3 rounded-lg border border-white/10 bg-stone-950/45 p-3">
+        <TimingBar
+          label="Policy evaluation"
+          tone="policy"
+          value={formatMs(policyMs)}
+          width={policyMs === undefined ? 0 : Math.max((policyMs / maxMs) * 100, 6)}
+        />
+        <TimingBar
+          label="Response generation"
+          tone="generation"
+          value={getGenerationTimingCopy(result, isSending)}
+          width={chatMs === undefined ? 0 : Math.max((chatMs / maxMs) * 100, 6)}
+        />
+        <p className="text-xs leading-5 text-stone-500">
+          Both start together. A blocked prompt aborts generation before a final response time exists.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function TimingBar({
+  label,
+  tone,
+  value,
+  width,
+}: {
+  readonly label: string;
+  readonly tone: "policy" | "generation";
+  readonly value: string;
+  readonly width: number;
+}) {
+  return (
+    <div>
+      <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
+        <span className="font-medium text-stone-300">{label}</span>
+        <span className="text-stone-500">{value}</span>
+      </div>
+      <div className="h-2 overflow-hidden rounded-full bg-white/[0.07]">
+        <div
+          className={cn(
+            "h-full rounded-full transition-all",
+            width === 0 && "opacity-0",
+            tone === "policy" ? "bg-emerald-300" : "bg-sky-300",
+          )}
+          style={{ width: `${width}%` }}
+        />
+      </div>
+    </div>
   );
 }
 
@@ -617,7 +687,7 @@ function getDecisionCopy(result: ChatResult | null, isSending: boolean) {
   return "Scopra blocked the latest prompt before returning the assistant response.";
 }
 
-function getTimingCopy(result: ChatResult | null, isSending: boolean) {
+function getTotalTimingCopy(result: ChatResult | null, isSending: boolean) {
   if (isSending) {
     return "Running";
   }
@@ -626,5 +696,29 @@ function getTimingCopy(result: ChatResult | null, isSending: boolean) {
     return "No run";
   }
 
-  return `${result.timings.policyMs}ms policy`;
+  return formatMs(result.timings.totalMs);
+}
+
+function getGenerationTimingCopy(result: ChatResult | null, isSending: boolean) {
+  if (isSending) {
+    return "Running";
+  }
+
+  if (result === null) {
+    return "No run";
+  }
+
+  if (result.timings.chatMs === undefined) {
+    return "Aborted";
+  }
+
+  return formatMs(result.timings.chatMs);
+}
+
+function formatMs(value: number | undefined) {
+  if (value === undefined) {
+    return "No run";
+  }
+
+  return `${value}ms`;
 }
