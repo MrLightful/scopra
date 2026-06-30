@@ -14,6 +14,7 @@
       "!node_modules",
       "!docs/.next",
       "!docs/node_modules",
+      "!docs/public/_pagefind",
       "!example/.next",
       "!example/node_modules",
       "!bun.lock",
