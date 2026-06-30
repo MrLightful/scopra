@@ -1,5 +1,12 @@
 # scopra
 
+## 0.0.2
+
+### Patch Changes
+
+- dec288a: Add native OpenAI and Anthropic SDK model evaluator adapters.
+- 89f4c98: Rename the policy-facing denial text field from `message` to `denial`.
+
 ## 0.0.1
 
 ### Patch Changes
