@@ -5,3 +5,6 @@ coverage
 *.tgz
 docs/.next
 docs/node_modules
+example/.next
+example/node_modules
+example/tsconfig.tsbuildinfo
