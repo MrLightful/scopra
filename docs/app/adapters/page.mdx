@@ -1,0 +1,91 @@
+# Adapters
+
+Scopra can evaluate policies through model adapters or custom evaluator functions.
+
+## OpenAI
+
+Use `openai(...)` with the official `openai` SDK client.
+
+```ts
+import OpenAI from "openai";
+import { openai, PolicyPipeline, PromptInjectionPolicy } from "scopra";
+
+const pipeline = new PolicyPipeline({
+  evaluator: openai(new OpenAI(), "gpt-4.1-mini"),
+  policies: [new PromptInjectionPolicy()],
+});
+```
+
+## Anthropic
+
+Use `anthropic(...)` with the official `@anthropic-ai/sdk` client. Anthropic requires `max_tokens`; Scopra provides a default and lets you override it.
+
+```ts
+import Anthropic from "@anthropic-ai/sdk";
+import { anthropic, PolicyPipeline, SocialEngineeringPolicy } from "scopra";
+
+const pipeline = new PolicyPipeline({
+  evaluator: anthropic(new Anthropic(), "claude-sonnet-4-5", {
+    maxTokens: 2048,
+  }),
+  policies: [new SocialEngineeringPolicy()],
+});
+```
+
+## Vercel AI SDK
+
+Use `vercel(...)` to adapt a Vercel AI SDK language model to Scopra's SDK-neutral model interface.
+
+```ts
+import { PolicyPipeline, PromptInjectionPolicy, vercel } from "scopra";
+import { openai } from "@ai-sdk/openai";
+
+const pipeline = new PolicyPipeline({
+  evaluator: vercel(openai("gpt-4.1-mini")),
+  policies: [new PromptInjectionPolicy()],
+});
+```
+
+## TanStack AI
+
+Use `tanstack(...)` to adapt a TanStack AI text adapter.
+
+```ts
+import { PolicyPipeline, SocialEngineeringPolicy, tanstack } from "scopra";
+
+const pipeline = new PolicyPipeline({
+  evaluator: tanstack(adapter),
+  policies: [new SocialEngineeringPolicy()],
+});
+```
+
+## Custom Evaluators
+
+Provide a function when you want full control over evaluation, deterministic tests, or a non-model policy engine.
+
+```ts
+import type { PolicyEvaluator } from "scopra";
+
+const evaluator: PolicyEvaluator = async ({ request, policies }) => {
+  return policies.map((policy) => ({
+    policyId: policy.id,
+    passed: true,
+    reason: `Checked ${request.type}.`,
+    confidence: 1,
+  }));
+};
+```
+
+## Where To Run Scopra
+
+Run Scopra before sensitive transitions in your agent workflow.
+
+| Stage | Use Scopra for |
+| --- | --- |
+| User input | First messages, suspicious follow-ups, support requests, account changes, and commercial pressure. |
+| Model output | Promises, commitments, professional advice, protected content, or data exposure. |
+| Tool calls | Refunds, deletions, writes to external systems, account access, and other side effects. |
+
+## User-Facing Denial Copy
+
+Use [`generateViolationResponse(...)`](/generate-violation-response) when you want model-generated denial copy from a denied decision.
