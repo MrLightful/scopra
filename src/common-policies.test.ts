@@ -132,6 +132,28 @@ describe("common policies", () => {
     );
   });
 
+  test("preserves agent scope punctuation", () => {
+    const questionScopePolicy = new AgentScopePolicy({
+      scope: "Answer billing questions?",
+    });
+    const urgentScopePolicy = new AgentScopePolicy({
+      scope: "Support critical billing incidents!",
+    });
+    const unpunctuatedScopePolicy = new AgentScopePolicy({
+      scope: "Handle account billing",
+    });
+
+    expect(questionScopePolicy.instruction).toContain(
+      "allowed scope: Answer billing questions? Pass requests",
+    );
+    expect(urgentScopePolicy.instruction).toContain(
+      "allowed scope: Support critical billing incidents! Pass requests",
+    );
+    expect(unpunctuatedScopePolicy.instruction).toContain(
+      "allowed scope: Handle account billing. Pass requests",
+    );
+  });
+
   test("applies message and confidence overrides", () => {
     const policy = new NoSecretsPolicy({
       message: "Custom secret warning.",

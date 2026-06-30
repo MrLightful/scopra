@@ -184,6 +184,31 @@ describe("model-backed policy evaluation", () => {
     ).rejects.toThrow("unknown policy id");
   });
 
+  test("rejects duplicate model findings for a configured policy", async () => {
+    const pipeline = new PolicyPipeline({
+      evaluator: createObjectModel({
+        findings: [
+          {
+            policyId: "no-secrets",
+            passed: true,
+          },
+          {
+            policyId: "no-secrets",
+            passed: false,
+          },
+        ],
+      }),
+      policies: [new Policy(noSecretsPolicy)],
+    });
+
+    await expect(
+      pipeline.evaluate({
+        type: "input",
+        content: "Hello",
+      }),
+    ).rejects.toThrow("duplicate findings");
+  });
+
   test("rejects model responses that omit configured policies", async () => {
     const pipeline = new PolicyPipeline({
       evaluator: createObjectModel({

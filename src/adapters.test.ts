@@ -137,6 +137,30 @@ describe("tanstack", () => {
       type: "object",
     });
   });
+
+  test("handles already-aborted signals before TanStack AI chat completes", async () => {
+    const { adapter, structuredOutputCalls } = createTanstackAdapter({
+      object: {
+        value: "ok",
+      },
+    });
+    const model = tanstack(adapter);
+    const abortController = new AbortController();
+    abortController.abort("already aborted");
+
+    await expect(
+      model.generateObject({
+        system: "Return JSON.",
+        prompt: "Return a value.",
+        schema: z.object({
+          value: z.string(),
+        }),
+        abortSignal: abortController.signal,
+      }),
+    ).rejects.toThrow("structured output finalization produced no result");
+
+    expect(structuredOutputCalls).toHaveLength(0);
+  });
 });
 
 function createTextGeneration(text: string) {
