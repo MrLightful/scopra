@@ -67,7 +67,7 @@ export async function POST(request: Request) {
       policies: [
         new AgentScopePolicy({
           scope: SUPPORT_SCOPE,
-          message:
+          denial:
             "Acme Support can only help with support, billing, account, product, plan, refund, and handoff requests.",
         }),
       ],
@@ -92,8 +92,7 @@ export async function POST(request: Request) {
         providerLabel: PROVIDER_LABELS[validated.provider],
         model: validated.model,
         answer:
-          decision.violations[0]?.message ??
-          "This request is outside the configured support scope.",
+          decision.violations[0]?.denial ?? "This request is outside the configured support scope.",
         decision: serializeDecision(decision),
         timings: {
           policyMs,
@@ -235,7 +234,7 @@ function serializeDecision(decision: Awaited<ReturnType<PolicyPipeline["evaluate
     violations: decision.violations.map((violation) => ({
       policyId: violation.policy.id,
       policyName: violation.policy.name,
-      message: violation.message,
+      message: violation.denial,
       reason: violation.finding.reason,
       confidence: violation.finding.confidence,
     })),
