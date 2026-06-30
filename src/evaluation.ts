@@ -79,8 +79,8 @@ export type PolicyViolation = {
   readonly policy: Policy;
   /** Failed finding returned by the evaluator. */
   readonly finding: PolicyFinding;
-  /** Denial message returned for this violation. */
-  readonly message: string;
+  /** Denial returned for this violation. */
+  readonly denial: string;
 };
 
 /**

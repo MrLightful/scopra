@@ -70,7 +70,7 @@ const text = await generateViolationResponse(model, decision, {
 });
 ```
 
-The default system instructions are intentionally conservative: they preserve the denial message, infer locale when needed, avoid exposing raw sensitive values, and avoid revealing policy internals.
+The default system instructions are intentionally conservative: they preserve the denial text, infer locale when needed, avoid exposing raw sensitive values, and avoid revealing policy internals.
 
 ## Forward Model Options
 
@@ -91,7 +91,6 @@ The exact `modelOptions` shape depends on the adapter you use, such as `openai(.
 
 ## What The Model Sees
 
-Scopra sends the response model a structured prompt containing the evaluated request, the primary denial message, and each violation's policy summary, reason, confidence, and message.
+Scopra sends the response model a structured prompt containing the evaluated request, the primary denial, and each violation's policy summary, reason, confidence, and denial.
 
 The prompt does not ask the model to re-evaluate the policy. It asks the model to write response text for an already-denied decision.
-

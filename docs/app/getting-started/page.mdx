@@ -27,7 +27,7 @@ const refundApprovalPolicy = new Policy({
   description: "Prevents the agent from promising unauthorized refunds.",
   instruction:
     "Fail when the user asks the agent to issue, promise, or confirm a refund that requires manager approval.",
-  message: "Refunds above the approved threshold need manager review.",
+  denial: "Refunds above the approved threshold need manager review.",
 });
 ```
 
@@ -57,7 +57,7 @@ const decision = await pipeline.evaluate({
 });
 
 if (!decision.allowed) {
-  return decision.violations[0]?.message ?? "This request needs review.";
+  return decision.violations[0]?.denial ?? "This request needs review.";
 }
 ```
 
@@ -89,7 +89,7 @@ const decision = await pipeline.evaluate({
 
 ## Handle Decisions
 
-Allowed decisions have no blocking violations. Denied decisions contain violations with the policy, evaluator finding, and message.
+Allowed decisions have no blocking violations. Denied decisions contain violations with the policy, evaluator finding, and denial.
 
 ```ts
 if (decision.allowed) {

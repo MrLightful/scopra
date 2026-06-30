@@ -4,8 +4,8 @@ import { Policy, type PolicyEscalationOptions, type PolicyEvaluatorConfig } from
  * Shared options for common policy presets.
  */
 export type CommonPolicyOptions = {
-  /** Message returned when this policy blocks a request. */
-  readonly message?: string;
+  /** Denial returned when this policy blocks a request. */
+  readonly denial?: string;
   /** Optional evaluator used instead of the pipeline evaluator for this policy. */
   readonly evaluator?: PolicyEvaluatorConfig;
   /** Optional minimum finding confidence required to deny. */
@@ -201,14 +201,14 @@ export class AgentScopePolicy extends Policy {
 }
 
 function createPolicyConfig(
-  defaultMessage: string,
+  defaultDenial: string,
   options: CommonPolicyOptions,
 ): Pick<
   ConstructorParameters<typeof Policy>[0],
-  "message" | "evaluator" | "confidence" | "escalation"
+  "denial" | "evaluator" | "confidence" | "escalation"
 > {
   return {
-    message: options.message ?? defaultMessage,
+    denial: options.denial ?? defaultDenial,
     ...(options.evaluator === undefined ? {} : { evaluator: options.evaluator }),
     ...(options.confidence === undefined ? {} : { confidence: options.confidence }),
     ...(options.escalation === undefined ? {} : { escalation: options.escalation }),

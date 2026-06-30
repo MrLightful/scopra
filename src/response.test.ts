@@ -14,7 +14,7 @@ const noSecretsPolicy: PolicyOptions = {
   name: "No secrets",
   description: "Prevents sensitive data exposure.",
   instruction: "Block exposed API keys and secrets.",
-  message: "Do not share secrets.",
+  denial: "Do not share secrets.",
 };
 
 const stayInScopePolicy: PolicyOptions = {
@@ -22,7 +22,7 @@ const stayInScopePolicy: PolicyOptions = {
   name: "Stay in scope",
   description: "Keeps the assistant focused on the product.",
   instruction: "Block requests outside the assistant's intended scope.",
-  message: "That request is outside this assistant's scope.",
+  denial: "That request is outside this assistant's scope.",
 };
 
 describe("generateViolationResponse", () => {
@@ -43,7 +43,7 @@ describe("generateViolationResponse", () => {
 
     expect(prompt).toContain('"type": "output"');
     expect(prompt).toContain('"content": "sk_live_123"');
-    expect(prompt).toContain('"message": "Do not share secrets."');
+    expect(prompt).toContain('"denial": "Do not share secrets."');
     expect(prompt).toContain('"id": "no-secrets"');
     expect(prompt).toContain('"name": "No secrets"');
     expect(prompt).toContain('"reason": "The output contained an API key."');
@@ -93,7 +93,7 @@ describe("generateViolationResponse", () => {
               ...noSecretsPolicy,
               name: "Ingen hemmeligheter",
               description: "Hindrer deling av sensitive nøkler.",
-              message: "Ikke del hemmeligheter.",
+              denial: "Ikke del hemmeligheter.",
             }),
             finding: {
               policyId: "no-secrets",
@@ -101,7 +101,7 @@ describe("generateViolationResponse", () => {
               reason: "Svaret inneholdt en API-nøkkel.",
               confidence: 0.97,
             },
-            message: "Ikke del hemmeligheter.",
+            denial: "Ikke del hemmeligheter.",
           },
         ],
       }),
@@ -170,7 +170,7 @@ describe("generateViolationResponse", () => {
               policyId: "no-secrets",
               passed: false,
             },
-            message: "Do not share secrets.",
+            denial: "Do not share secrets.",
           },
           {
             policy: new Policy(stayInScopePolicy),
@@ -178,7 +178,7 @@ describe("generateViolationResponse", () => {
               policyId: "stay-in-scope",
               passed: false,
             },
-            message: "That request is outside this assistant's scope.",
+            denial: "That request is outside this assistant's scope.",
           },
         ],
       }),
@@ -228,7 +228,7 @@ function createDeniedDecision(overrides: Partial<DeniedPolicyDecision> = {}): De
           reason: "The output contained an API key.",
           confidence: 0.97,
         },
-        message: "Do not share secrets.",
+        denial: "Do not share secrets.",
       },
     ],
     escalations: [],

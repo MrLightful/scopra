@@ -12,7 +12,7 @@ const noSecretsPolicy: PolicyOptions = {
   name: "No secrets",
   description: "Prevents sensitive data exposure.",
   instruction: "Block exposed API keys and secrets.",
-  message: "Do not share secrets.",
+  denial: "Do not share secrets.",
 };
 
 const stayInScopePolicy: PolicyOptions = {
@@ -20,7 +20,7 @@ const stayInScopePolicy: PolicyOptions = {
   name: "Stay in scope",
   description: "Keeps the assistant focused on the product.",
   instruction: "Block requests outside the assistant's intended scope.",
-  message: "That request is outside this assistant's scope.",
+  denial: "That request is outside this assistant's scope.",
 };
 
 describe("model-backed policy evaluation", () => {
