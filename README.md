@@ -1,5 +1,9 @@
 ![Cover](./assets/cover.png)
 
+[![NPM Version](https://img.shields.io/npm/v/scopra)](https://www.npmjs.com/package/scopra)
+[![NPM Downloads](https://img.shields.io/npm/dm/scopra)](https://www.npmjs.com/package/scopra)
+[![CI Status](https://img.shields.io/github/actions/workflow/status/MrLightful/scopra/ci.yml?label=CI)](https://github.com/MrLightful/scopra/actions/workflows/ci.yml)
+
 ## About
 
 Business-rule guardrails for AI agents.
