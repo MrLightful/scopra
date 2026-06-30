@@ -1,0 +1,57 @@
+# Cost-Aware Evaluation
+
+Scopra does not need to run on your most capable model. Policy evaluation is usually a classification and business-rule reasoning task, not an open-ended generation task.
+
+In practice, Scopra often works best when it runs on a faster, cheaper evaluator model with clear policies and predictable routing. Save state-of-the-art models for the agent work that actually needs them: deep reasoning, synthesis, planning, or high-value user-facing generation.
+
+## Optimize The Evaluation Layer
+
+Cost-aware evaluation starts with treating Scopra as its own layer in your agent system. The evaluator does not need to be the same model that writes the final answer, plans a workflow, or uses tools.
+
+A smaller evaluator can still be effective when the policy is specific, the request context is focused, and the decision is narrow. Strong policy wording, clear workflow boundaries, and good escalation rules usually matter more than raw model capability.
+
+## Evaluate Risky Transitions
+
+You do not need to evaluate every request. Run Scopra where the agent is about to cross a meaningful boundary.
+
+Good evaluation points include first messages in a session, commercially sensitive requests, account changes, refunds, data access, permission changes, and any tool call with external side effects. Routine clarifying questions, low-risk informational replies, and repeated safe turns may not need the same level of review.
+
+The goal is not maximum coverage at any cost. The goal is to spend evaluation budget where a wrong action would matter.
+
+## Use Trust Tiers
+
+User trust can help decide when to evaluate. New, anonymous, low-reputation, recently suspicious, or permission-expanded users may deserve more frequent checks. Trusted repeat users in low-risk workflows may need fewer checks.
+
+Trust should not disable protection for sensitive flows. It is a routing signal, not a blanket exemption. A trusted user asking for an account takeover workflow, regulated advice, payment change, or destructive action should still pass through evaluation.
+
+## Sample Low-Risk Traffic
+
+Random sampling lets you keep watching low-risk traffic without evaluating all of it. This is useful for spotting drift, measuring policy quality, and catching emerging abuse patterns.
+
+Sampling works best when it is deliberate. Keep the sample rate high enough to learn from, but low enough that routine traffic does not dominate your evaluation spend. Treat sampled results as monitoring data, not just request-level enforcement.
+
+## Always Protect Sensitive Flows
+
+Some flows should be evaluated regardless of user trust or sampling rules. Account recovery, personal data exposure, payments, regulated advice, destructive actions, permission changes, and external writes all carry higher consequences.
+
+These flows are where Scopra can be most valuable. Even a plausible, well-worded request can be unsafe if it asks the agent to cross a business, privacy, compliance, or authorization boundary.
+
+## Escalate Selectively
+
+Escalation helps avoid spending the same amount on every decision. A broad, inexpensive first pass can handle clear cases. More detailed review can run only when confidence is low, the request is ambiguous, or the workflow is especially sensitive.
+
+This keeps common safe traffic cheap while giving uncertain or high-impact cases more attention. It also makes policy behavior easier to tune because escalation happens for a defined reason instead of every request.
+
+## Choose The Right Surface
+
+Scopra can evaluate user input, model output, and tool calls. Cost-aware systems choose the surface that matches the risk.
+
+Input evaluation is useful before the agent starts a sensitive workflow. Output evaluation is useful before returning promises, advice, protected content, or sensitive data. Tool evaluation is useful before side-effectful actions such as refunds, deletions, permission changes, account access, and external writes.
+
+Many applications use a mix of all three, but not always at the same frequency. The right evaluation plan depends on where your agent can cause harm, leak information, or create commitments.
+
+## Practical Default
+
+Start with a cheaper evaluator model, evaluate sensitive transitions by default, sample low-risk traffic, and escalate uncertain cases. Then use real decisions, review outcomes, and incident data to tune the routing over time.
+
+Cost optimization should not mean weaker safeguards. It should mean using Scopra where it changes the risk profile most.
