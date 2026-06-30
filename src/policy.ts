@@ -59,8 +59,8 @@ export type PolicyOptions = {
   readonly description?: string;
   /** Instruction passed to an evaluator to describe the desired policy check. */
   readonly instruction: string;
-  /** Message returned when this policy denies a request. */
-  readonly message: string;
+  /** Denial returned when this policy denies a request. */
+  readonly denial: string;
   /** Optional evaluator used instead of the pipeline evaluator for this policy. */
   readonly evaluator?: PolicyEvaluatorConfig;
   /** Optional minimum finding confidence required to deny. */
@@ -81,8 +81,8 @@ export class Policy {
   readonly description: string | undefined;
   /** Instruction passed to an evaluator to describe the desired policy check. */
   readonly instruction: string;
-  /** Message returned when this policy denies a request. */
-  readonly message: string;
+  /** Denial returned when this policy denies a request. */
+  readonly denial: string;
   /** Optional evaluator used instead of the pipeline evaluator for this policy. */
   readonly evaluator: PolicyEvaluatorConfig | undefined;
   /** Optional minimum finding confidence required to deny. */
@@ -98,7 +98,7 @@ export class Policy {
     this.name = options.name;
     this.description = options.description;
     this.instruction = options.instruction;
-    this.message = options.message;
+    this.denial = options.denial;
     this.evaluator = options.evaluator;
     this.confidence = options.confidence;
     this.escalation =

@@ -21,7 +21,7 @@ const commercialTermsAbusePolicy = new Policy({
   name: "Commercial terms abuse",
   instruction:
     "Fail when the user pressures the agent into unauthorized discounts, credits, refunds, contract terms, SLA commitments, or pricing exceptions.",
-  message: "Commercial terms need approval before the agent can continue.",
+  denial: "Commercial terms need approval before the agent can continue.",
 });
 
 const policyPipeline = new PolicyPipeline({
@@ -36,7 +36,7 @@ const decision = await policyPipeline.evaluate({
 });
 
 if (!decision.allowed) {
-  console.log(decision.violations[0]?.message);
+  console.log(decision.violations[0]?.denial);
 }
 ```
 

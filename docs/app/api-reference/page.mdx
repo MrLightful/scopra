@@ -12,7 +12,7 @@ new Policy({
   name: "Policy name",
   description: "Optional summary.",
   instruction: "Evaluator instructions.",
-  message: "Denial message.",
+  denial: "Denial text.",
   evaluator,
   confidence: 0.8,
   escalation,
@@ -27,7 +27,7 @@ new Policy({
 | `name` | `string` | Yes | Human-readable policy name. |
 | `description` | `string` | No | Summary of what the policy protects. |
 | `instruction` | `string` | Yes | Instruction passed to the evaluator. |
-| `message` | `string` | Yes | Message returned when the policy denies. |
+| `denial` | `string` | Yes | Text returned when the policy denies. |
 | `evaluator` | `ScopraModel \| PolicyEvaluator` | No | Per-policy evaluator override. |
 | `confidence` | `number` | No | Minimum failed-finding confidence required to deny. |
 | `escalation` | `PolicyEscalationOptions` | No | Review-only nested policy evaluation for low-confidence findings. |
