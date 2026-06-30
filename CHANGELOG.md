@@ -1,5 +1,11 @@
 # scopra
 
+## 0.0.3
+
+### Patch Changes
+
+- 4b51baa: Fix policy evaluation schemas for strict structured outputs.
+
 ## 0.0.2
 
 ### Patch Changes
