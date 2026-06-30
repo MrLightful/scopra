@@ -10,14 +10,16 @@ const DEFAULT_SYSTEM = [
   "Return exactly one finding for every provided policy id.",
   "Set passed to true only when the request satisfies the policy.",
   "When a policy fails, include a concise reason.",
+  "Set reason to null when no reason applies.",
   "When confidence is provided, it must be between 0 and 1.",
+  "Set confidence to null when no confidence score applies.",
 ].join(" ");
 
 const findingSchema = z.object({
   policyId: z.string(),
   passed: z.boolean(),
-  reason: z.string().optional(),
-  confidence: z.number().min(0).max(1).optional(),
+  reason: z.string().nullable(),
+  confidence: z.number().min(0).max(1).nullable(),
 });
 
 const evaluationSchema = z.object({
@@ -90,8 +92,8 @@ function toPolicyFinding(finding: z.infer<typeof findingSchema>): PolicyFinding 
   return {
     policyId: finding.policyId,
     passed: finding.passed,
-    ...(finding.reason !== undefined ? { reason: finding.reason } : {}),
-    ...(finding.confidence !== undefined ? { confidence: finding.confidence } : {}),
+    ...(finding.reason !== null ? { reason: finding.reason } : {}),
+    ...(finding.confidence !== null ? { confidence: finding.confidence } : {}),
   };
 }
 

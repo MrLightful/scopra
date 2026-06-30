@@ -271,6 +271,8 @@ describe("PolicyPipeline", () => {
         {
           policyId: "no-secrets",
           passed: true,
+          reason: null,
+          confidence: null,
         },
       ],
     });
