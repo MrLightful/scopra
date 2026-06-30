@@ -82,6 +82,22 @@ if (!decision.allowed) {
 }
 ```
 
+## Example app
+
+This repository includes a small Next.js chat demo in `example`. It uses the
+Vercel AI SDK with Scopra's `AgentScopePolicy` to run an AI support reply and a
+scope check in parallel.
+
+The app lets you choose OpenAI, Anthropic, or Google Gemini, enter a model name,
+and provide provider credentials in the UI. Credentials are kept in memory for
+the request and are not written to disk, environment files, or local storage.
+
+```sh
+cd example
+bun install
+bun run dev
+```
+
 ## Built-in policies
 
 Scopra ships with policy presets for common boundaries:

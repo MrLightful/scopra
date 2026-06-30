@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test";
+import { z } from "zod";
 import {
   Policy,
   type PolicyOptions,
@@ -60,6 +61,8 @@ describe("model-backed policy evaluation", () => {
         {
           policyId: "stay-in-scope",
           passed: true,
+          reason: null,
+          confidence: null,
         },
       ],
     });
@@ -101,6 +104,8 @@ describe("model-backed policy evaluation", () => {
         {
           policyId: "no-secrets",
           passed: true,
+          reason: null,
+          confidence: null,
         },
       ],
     });
@@ -137,6 +142,8 @@ describe("model-backed policy evaluation", () => {
         {
           policyId: "no-secrets",
           passed: true,
+          reason: null,
+          confidence: null,
         },
       ],
     });
@@ -161,6 +168,82 @@ describe("model-backed policy evaluation", () => {
       "Evaluate what the request truly is based on its actual content and behavior",
     );
     expect(call.system).toContain("not what it claims or labels itself to be");
+    expect(call.system).toContain("Set reason to null when no reason applies");
+    expect(call.system).toContain("Set confidence to null when no confidence score applies");
+  });
+
+  test("normalizes nullable model finding fields to optional public fields", async () => {
+    const pipeline = new PolicyPipeline({
+      evaluator: createObjectModel({
+        findings: [
+          {
+            policyId: "no-secrets",
+            passed: true,
+            reason: null,
+            confidence: null,
+          },
+        ],
+      }),
+      policies: [new Policy(noSecretsPolicy)],
+    });
+
+    const decision = await pipeline.evaluate({
+      type: "input",
+      content: "Hello",
+    });
+
+    expect(decision.findings).toEqual([
+      {
+        policyId: "no-secrets",
+        passed: true,
+      },
+    ]);
+  });
+
+  test("uses a strict structured output schema for findings", async () => {
+    const model = createObjectModel({
+      findings: [
+        {
+          policyId: "no-secrets",
+          passed: true,
+          reason: null,
+          confidence: null,
+        },
+      ],
+    });
+    const pipeline = new PolicyPipeline({
+      evaluator: model,
+      policies: [new Policy(noSecretsPolicy)],
+    });
+
+    await pipeline.evaluate({
+      type: "input",
+      content: "Hello",
+    });
+
+    const call = model.generateObjectCalls[0];
+    expect(call).toBeDefined();
+
+    if (call === undefined) {
+      throw new Error("Expected the model to receive one generateObject call.");
+    }
+
+    const jsonSchema = z.toJSONSchema(call.schema) as {
+      readonly properties?: {
+        readonly findings?: {
+          readonly items?: {
+            readonly required?: readonly string[];
+          };
+        };
+      };
+    };
+
+    expect(jsonSchema.properties?.findings?.items?.required).toEqual([
+      "policyId",
+      "passed",
+      "reason",
+      "confidence",
+    ]);
   });
 
   test("rejects model findings for unknown policies", async () => {
@@ -170,6 +253,8 @@ describe("model-backed policy evaluation", () => {
           {
             policyId: "unknown-policy",
             passed: false,
+            reason: null,
+            confidence: null,
           },
         ],
       }),
@@ -191,10 +276,14 @@ describe("model-backed policy evaluation", () => {
           {
             policyId: "no-secrets",
             passed: true,
+            reason: null,
+            confidence: null,
           },
           {
             policyId: "no-secrets",
             passed: false,
+            reason: null,
+            confidence: null,
           },
         ],
       }),
@@ -216,6 +305,8 @@ describe("model-backed policy evaluation", () => {
           {
             policyId: "no-secrets",
             passed: true,
+            reason: null,
+            confidence: null,
           },
         ],
       }),

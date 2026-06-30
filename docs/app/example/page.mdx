@@ -1,0 +1,39 @@
+import { ExampleDemo } from "./example-demo";
+
+# Example App
+
+Scopra includes a small Next.js chat demo in the repository's `example` directory.
+It shows an AI support agent running a model response and an `AgentScopePolicy`
+evaluation in parallel.
+
+The demo uses the Vercel AI SDK with Scopra's `vercel(...)` adapter. You can
+choose OpenAI, Anthropic, or Google Gemini, then enter a model name and provider
+API key in the app.
+
+Credentials are kept in memory for the request. The example does not write API
+keys to disk, environment files, or local storage.
+
+## Try It Here
+
+This embedded demo sends credentials only with the request you submit. It does
+not store keys in local storage, environment files, or the repository.
+
+<ExampleDemo />
+
+## Run It
+
+```sh
+cd example
+bun install
+bun run dev
+```
+
+Open the local URL printed by Next.js, choose a provider, enter credentials, and
+try an in-scope support prompt or an out-of-scope request.
+
+## What It Demonstrates
+
+- A Vercel AI SDK chat request and Scopra policy evaluation started together.
+- `AgentScopePolicy` keeping a support agent inside billing, account access,
+  troubleshooting, plan, refund, and handoff requests.
+- Provider switching without changing the Scopra policy pipeline.
