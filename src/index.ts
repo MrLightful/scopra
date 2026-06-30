@@ -49,5 +49,7 @@ export type {
 export { Policy } from "./policy";
 export type { GenerateViolationResponseOptions } from "./response";
 export { generateViolationResponse } from "./response";
+export { anthropic, type AnthropicAdapterOptions } from "./anthropic";
+export { openai } from "./openai";
 export { tanstack } from "./tanstack";
 export { vercel } from "./vercel";
