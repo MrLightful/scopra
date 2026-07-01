@@ -1,5 +1,11 @@
 # scopra
 
+## 0.0.4
+
+### Patch Changes
+
+- 4a4f9e4: Add optional report-only severity metadata to policy findings.
+
 ## 0.0.3
 
 ### Patch Changes
