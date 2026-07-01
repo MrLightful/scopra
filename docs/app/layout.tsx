@@ -17,7 +17,20 @@ const navbar = (
 );
 
 const footer = (
-  <Footer>MIT Licensed. Built for developer-first TypeScript policy enforcement.</Footer>
+  <Footer>
+    <span className="scopra-footer-attribution">
+      By{" "}
+      <a href="https://mrlightful.com">
+        <img
+          src="https://www.gravatar.com/avatar/42fcc55b28fa774e9a646dd2dd7ae0cf?s=48"
+          alt=""
+          width="24"
+          height="24"
+        />
+        MrLightful
+      </a>
+    </span>
+  </Footer>
 );
 
 export default async function RootLayout({ children }: { children: ReactNode }) {

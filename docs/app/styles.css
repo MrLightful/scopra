@@ -2,6 +2,22 @@
   --scopra-accent: #0f766e;
 }
 
+.scopra-footer-attribution,
+.scopra-footer-attribution a {
+  align-items: center;
+  display: inline-flex;
+  gap: 0.4rem;
+}
+
+.scopra-footer-attribution {
+  justify-content: center;
+  width: 100%;
+}
+
+.scopra-footer-attribution img {
+  border-radius: 999px;
+}
+
 .scopra-hero {
   display: grid;
   gap: 1.5rem;
