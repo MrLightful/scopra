@@ -35,6 +35,7 @@ type PolicyFinding = {
   readonly passed: boolean;
   readonly reason?: string;
   readonly confidence?: number;
+  readonly severity?: "low" | "medium" | "high" | "critical";
 };
 
 type ChatResult = {
@@ -51,6 +52,7 @@ type ChatResult = {
       readonly message: string;
       readonly reason?: string;
       readonly confidence?: number;
+      readonly severity?: "low" | "medium" | "high" | "critical";
     }[];
   };
   readonly timings: {
@@ -480,7 +482,7 @@ function PolicyInspector({
           <div className="mb-2 text-xs font-medium uppercase text-stone-500">Findings</div>
           {result === null ? (
             <div className="rounded-lg border border-dashed border-white/12 p-3 text-sm leading-6 text-stone-500">
-              No run yet. Send a prompt to inspect the policy finding and confidence.
+              No run yet. Send a prompt to inspect the policy finding, severity, and confidence.
             </div>
           ) : (
             <div className="space-y-2">
@@ -572,13 +574,20 @@ function FindingCard({ finding }: { readonly finding: PolicyFinding }) {
         </Badge>
       </div>
       <p className="text-sm leading-6 text-stone-400">{finding.reason ?? "No reason returned."}</p>
-      {finding.confidence !== undefined && (
-        <p className="mt-2 text-xs text-stone-500">
-          Confidence {Math.round(finding.confidence * 100)}%
-        </p>
+      {(finding.severity !== undefined || finding.confidence !== undefined) && (
+        <div className="mt-2 flex flex-wrap gap-2 text-xs text-stone-500">
+          {finding.severity !== undefined && <span>{formatSeverity(finding.severity)}</span>}
+          {finding.confidence !== undefined && (
+            <span>Confidence {Math.round(finding.confidence * 100)}%</span>
+          )}
+        </div>
       )}
     </div>
   );
+}
+
+function formatSeverity(severity: NonNullable<PolicyFinding["severity"]>) {
+  return `Severity ${severity[0].toUpperCase()}${severity.slice(1)}`;
 }
 
 function Metric({

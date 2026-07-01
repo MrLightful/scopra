@@ -10,9 +10,11 @@ const DEFAULT_SYSTEM = [
   "Return exactly one finding for every provided policy id.",
   "Set passed to true only when the request satisfies the policy.",
   "When a policy fails, include a concise reason.",
+  "When a policy fails, set severity to low, medium, high, or critical based on the seriousness of the failure.",
   "Set reason to null when no reason applies.",
   "When confidence is provided, it must be between 0 and 1.",
   "Set confidence to null when no confidence score applies.",
+  "Set severity to null when no severity applies.",
 ].join(" ");
 
 const findingSchema = z.object({
@@ -20,6 +22,7 @@ const findingSchema = z.object({
   passed: z.boolean(),
   reason: z.string().nullable(),
   confidence: z.number().min(0).max(1).nullable(),
+  severity: z.enum(["low", "medium", "high", "critical"]).nullable(),
 });
 
 const evaluationSchema = z.object({
@@ -94,6 +97,7 @@ function toPolicyFinding(finding: z.infer<typeof findingSchema>): PolicyFinding 
     passed: finding.passed,
     ...(finding.reason !== null ? { reason: finding.reason } : {}),
     ...(finding.confidence !== null ? { confidence: finding.confidence } : {}),
+    ...(finding.severity !== null ? { severity: finding.severity } : {}),
   };
 }
 

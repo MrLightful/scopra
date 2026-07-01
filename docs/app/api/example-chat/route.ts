@@ -230,6 +230,7 @@ function serializeDecision(decision: Awaited<ReturnType<PolicyPipeline["evaluate
       passed: finding.passed,
       reason: finding.reason,
       confidence: finding.confidence,
+      severity: finding.severity,
     })),
     violations: decision.violations.map((violation) => ({
       policyId: violation.policy.id,
@@ -237,6 +238,7 @@ function serializeDecision(decision: Awaited<ReturnType<PolicyPipeline["evaluate
       denial: violation.denial,
       reason: violation.finding.reason,
       confidence: violation.finding.confidence,
+      severity: violation.finding.severity,
     })),
   };
 }

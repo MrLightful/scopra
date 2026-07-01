@@ -77,6 +77,7 @@ function buildPrompt(decision: DeniedPolicyDecision, options: PromptOptions): st
           finding: {
             reason: violation.finding.reason,
             confidence: violation.finding.confidence,
+            severity: violation.finding.severity,
           },
           denial: violation.denial,
         })),

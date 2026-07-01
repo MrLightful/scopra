@@ -273,6 +273,7 @@ describe("PolicyPipeline", () => {
           passed: true,
           reason: null,
           confidence: null,
+          severity: null,
         },
       ],
     });

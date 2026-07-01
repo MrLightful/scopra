@@ -41,6 +41,11 @@ export type EvaluationRequest =
   | ToolEvaluationRequest;
 
 /**
+ * Report-only seriousness level for a policy finding.
+ */
+export type PolicySeverity = "low" | "medium" | "high" | "critical";
+
+/**
  * Result for a single policy produced by a policy evaluator.
  */
 export type PolicyFinding = {
@@ -52,6 +57,8 @@ export type PolicyFinding = {
   readonly reason?: string;
   /** Optional confidence score from the evaluator. */
   readonly confidence?: number;
+  /** Optional report-only seriousness level from the evaluator. */
+  readonly severity?: PolicySeverity;
 };
 
 /**

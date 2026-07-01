@@ -28,6 +28,7 @@ type PolicyFinding = {
   readonly passed: boolean;
   readonly reason?: string;
   readonly confidence?: number;
+  readonly severity?: "low" | "medium" | "high" | "critical";
 };
 
 type ChatResult = {
@@ -367,7 +368,7 @@ function PolicyPanel({
       <div className="scopra-demo-findings">
         <span>Findings</span>
         {result === null ? (
-          <p>No run yet. Send a prompt to inspect the policy finding and confidence.</p>
+          <p>No run yet. Send a prompt to inspect the policy finding, severity, and confidence.</p>
         ) : (
           result.decision.findings.map((finding) => (
             <div className="scopra-demo-finding" key={finding.policyId}>
@@ -376,8 +377,19 @@ function PolicyPanel({
                 <StatusPill passed={finding.passed} />
               </div>
               <p>{finding.reason ?? "No reason returned."}</p>
-              {finding.confidence !== undefined && (
-                <small>Confidence {Math.round(finding.confidence * 100)}%</small>
+              {(finding.severity !== undefined || finding.confidence !== undefined) && (
+                <small>
+                  {[
+                    finding.severity !== undefined
+                      ? `Severity ${formatSeverity(finding.severity)}`
+                      : undefined,
+                    finding.confidence !== undefined
+                      ? `Confidence ${Math.round(finding.confidence * 100)}%`
+                      : undefined,
+                  ]
+                    .filter((value) => value !== undefined)
+                    .join(" / ")}
+                </small>
               )}
             </div>
           ))
@@ -506,6 +518,10 @@ function StatusPill({ passed }: { readonly passed: boolean }) {
   return (
     <span className={passed ? "is-allowed" : "is-blocked"}>{passed ? "Passed" : "Failed"}</span>
   );
+}
+
+function formatSeverity(severity: NonNullable<PolicyFinding["severity"]>) {
+  return `${severity[0].toUpperCase()}${severity.slice(1)}`;
 }
 
 function getDecisionCopy(result: ChatResult | null, isSending: boolean) {

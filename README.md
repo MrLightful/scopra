@@ -77,10 +77,13 @@ const decision = await policyPipeline.evaluate({
 // Continue, block, or route for review based on the policy decision.
 if (!decision.allowed) {
   console.log(decision.violations[0]?.denial ?? "Approval needed.");
+  console.log(decision.violations[0]?.finding.severity ?? "severity unknown");
 } else {
   console.log("Request approved.");
 }
 ```
+
+Findings may include `severity` as `"low"`, `"medium"`, `"high"`, or `"critical"` so your app can report how serious a denial was. Severity is informational; denial behavior still depends on `passed` and any configured confidence threshold.
 
 ## Example app
 

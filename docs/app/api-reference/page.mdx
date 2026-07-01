@@ -81,8 +81,13 @@ type PolicyFinding = {
   passed: boolean;
   reason?: string;
   confidence?: number;
+  severity?: PolicySeverity;
 };
+
+type PolicySeverity = "low" | "medium" | "high" | "critical";
 ```
+
+`severity` is report-only metadata for how serious a failed finding is. It does not affect denial or escalation behavior; use policy `confidence` thresholds for enforcement.
 
 ## Model Adapters
 

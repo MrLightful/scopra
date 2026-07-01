@@ -26,6 +26,7 @@ export type {
   PolicyEvaluator,
   PolicyEvaluatorContext,
   PolicyFinding,
+  PolicySeverity,
   PolicyViolation,
   ToolEvaluationRequest,
 } from "./evaluation";

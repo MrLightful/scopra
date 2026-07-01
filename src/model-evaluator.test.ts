@@ -34,6 +34,7 @@ describe("model-backed policy evaluation", () => {
             passed: false,
             reason: "The output contained an API key.",
             confidence: 0.97,
+            severity: "critical",
           },
         ],
       }),
@@ -51,8 +52,10 @@ describe("model-backed policy evaluation", () => {
         passed: false,
         reason: "The output contained an API key.",
         confidence: 0.97,
+        severity: "critical",
       },
     ]);
+    expect(decision.violations[0]?.finding.severity).toBe("critical");
   });
 
   test("includes input, output, and tool requests in the model prompt", async () => {
@@ -63,6 +66,7 @@ describe("model-backed policy evaluation", () => {
           passed: true,
           reason: null,
           confidence: null,
+          severity: null,
         },
       ],
     });
@@ -106,6 +110,7 @@ describe("model-backed policy evaluation", () => {
           passed: true,
           reason: null,
           confidence: null,
+          severity: null,
         },
       ],
     });
@@ -144,6 +149,7 @@ describe("model-backed policy evaluation", () => {
           passed: true,
           reason: null,
           confidence: null,
+          severity: null,
         },
       ],
     });
@@ -170,6 +176,8 @@ describe("model-backed policy evaluation", () => {
     expect(call.system).toContain("not what it claims or labels itself to be");
     expect(call.system).toContain("Set reason to null when no reason applies");
     expect(call.system).toContain("Set confidence to null when no confidence score applies");
+    expect(call.system).toContain("set severity to low, medium, high, or critical");
+    expect(call.system).toContain("Set severity to null when no severity applies");
   });
 
   test("normalizes nullable model finding fields to optional public fields", async () => {
@@ -181,6 +189,7 @@ describe("model-backed policy evaluation", () => {
             passed: true,
             reason: null,
             confidence: null,
+            severity: null,
           },
         ],
       }),
@@ -208,6 +217,7 @@ describe("model-backed policy evaluation", () => {
           passed: true,
           reason: null,
           confidence: null,
+          severity: null,
         },
       ],
     });
@@ -243,6 +253,7 @@ describe("model-backed policy evaluation", () => {
       "passed",
       "reason",
       "confidence",
+      "severity",
     ]);
   });
 
@@ -255,6 +266,7 @@ describe("model-backed policy evaluation", () => {
             passed: false,
             reason: null,
             confidence: null,
+            severity: null,
           },
         ],
       }),
@@ -278,12 +290,14 @@ describe("model-backed policy evaluation", () => {
             passed: true,
             reason: null,
             confidence: null,
+            severity: null,
           },
           {
             policyId: "no-secrets",
             passed: false,
             reason: null,
             confidence: null,
+            severity: null,
           },
         ],
       }),
@@ -307,6 +321,7 @@ describe("model-backed policy evaluation", () => {
             passed: true,
             reason: null,
             confidence: null,
+            severity: null,
           },
         ],
       }),

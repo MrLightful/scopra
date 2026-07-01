@@ -26,6 +26,7 @@ const evaluator = async ({ request, policies }) => {
     policyId: policy.id,
     passed: !String(request.content ?? "").includes("override approval"),
     confidence: 0.9,
+    severity: "high",
   }));
 };
 ```
@@ -40,12 +41,16 @@ type PolicyFinding = {
   passed: boolean;
   reason?: string;
   confidence?: number;
+  severity?: "low" | "medium" | "high" | "critical";
 };
 ```
+
+`severity` is report-only metadata that describes how serious a finding is, especially when the finding fails. It does not change whether a request is denied.
 
 ## Confidence Thresholds
 
 Set `confidence` on a policy when a failed finding should only deny above a minimum confidence score.
+Confidence represents how sure the evaluator is; severity represents how bad the finding would be.
 
 ```ts
 new Policy({
