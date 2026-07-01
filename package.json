@@ -64,7 +64,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.7",
-    "@anthropic-ai/sdk": "^0.108.0",
+    "@anthropic-ai/sdk": "^0.109.0",
     "@changesets/cli": "^2.31.0",
     "@tanstack/ai": "^0.39.0",
     "@types/bun": "^1.3.2",
@@ -73,7 +73,7 @@
     "typescript": "^6.0.3"
   },
   "peerDependencies": {
-    "@anthropic-ai/sdk": "^0.108.0",
+    "@anthropic-ai/sdk": "^0.109.0",
     "@tanstack/ai": "^0.39.0",
     "ai": "^7.0.4",
     "openai": "^6.45.0"
