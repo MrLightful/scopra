@@ -48,6 +48,7 @@ describe("generateViolationResponse", () => {
     expect(prompt).toContain('"name": "No secrets"');
     expect(prompt).toContain('"reason": "The output contained an API key."');
     expect(prompt).toContain('"confidence": 0.97');
+    expect(prompt).toContain('"severity": "critical"');
   });
 
   test("uses custom instructions and forwards model options", async () => {
@@ -217,6 +218,7 @@ function createDeniedDecision(overrides: Partial<DeniedPolicyDecision> = {}): De
         passed: false,
         reason: "The output contained an API key.",
         confidence: 0.97,
+        severity: "critical",
       },
     ],
     violations: [
@@ -227,6 +229,7 @@ function createDeniedDecision(overrides: Partial<DeniedPolicyDecision> = {}): De
           passed: false,
           reason: "The output contained an API key.",
           confidence: 0.97,
+          severity: "critical",
         },
         denial: "Do not share secrets.",
       },

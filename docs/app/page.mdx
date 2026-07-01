@@ -37,8 +37,11 @@ const decision = await policyPipeline.evaluate({
 
 if (!decision.allowed) {
   console.log(decision.violations[0]?.denial);
+  console.log(decision.violations[0]?.finding.severity);
 }
 ```
+
+Denied findings can include report-only severity values (`"low"`, `"medium"`, `"high"`, or `"critical"`) so you can show how serious the denial was without changing enforcement thresholds.
 
 <div className="scopra-grid">
   <a className="scopra-card" href="/getting-started">
