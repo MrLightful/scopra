@@ -20,7 +20,7 @@
     "nextra-theme-docs": "4.5.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "scopra": "0.0.4",
+    "scopra": "0.0.5",
     "zod": "^4.4.3"
   },
   "devDependencies": {
