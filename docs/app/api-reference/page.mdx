@@ -130,3 +130,30 @@ const response = await generateViolationResponse(model, decision, {
   modelOptions,
 });
 ```
+
+## Error Handling
+
+Scopra rejects with typed errors when evaluation or violation-response generation cannot complete.
+
+| Export | Description |
+| --- | --- |
+| `ScopraError` | Base class for typed Scopra errors. |
+| `PolicyEvaluationError` | Error for evaluator, model, or policy-finding failures. |
+| `ViolationResponseError` | Error for failed denial-response generation. |
+| `isScopraError(error)` | Type guard for Scopra errors. |
+| `ScopraErrorCode` | Stable error code union. |
+
+```ts
+try {
+  const decision = await pipeline.evaluate(request);
+} catch (error) {
+  if (isScopraError(error)) {
+    console.warn(error.code, error.context);
+    return error.publicMessage;
+  }
+
+  throw error;
+}
+```
+
+See the [Error Handling guide](/error-handling) for production patterns.

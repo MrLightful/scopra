@@ -1,4 +1,5 @@
 import type { DeniedPolicyDecision } from "./evaluation";
+import { createEvaluationErrorContext, isScopraError, ViolationResponseError } from "./errors";
 import type { ScopraModel, ScopraModelOptions } from "./model";
 
 const DEFAULT_SYSTEM = [
@@ -36,15 +37,30 @@ export async function generateViolationResponse(
 ): Promise<string> {
   const { system, instructions, locale, abortSignal, modelOptions } = options;
 
-  return model.generateText({
-    system: system ?? DEFAULT_SYSTEM,
-    prompt: buildPrompt(decision, {
-      instructions,
-      locale,
-    }),
-    abortSignal,
-    modelOptions,
-  });
+  try {
+    return await model.generateText({
+      system: system ?? DEFAULT_SYSTEM,
+      prompt: buildPrompt(decision, {
+        instructions,
+        locale,
+      }),
+      abortSignal,
+      modelOptions,
+    });
+  } catch (error) {
+    if (isScopraError(error)) {
+      throw error;
+    }
+
+    throw new ViolationResponseError("Violation response generation failed.", {
+      cause: error,
+      context: createEvaluationErrorContext(
+        decision.request,
+        decision.violations.map((violation) => violation.policy),
+        "violation_response",
+      ),
+    });
+  }
 }
 
 type PromptOptions = {

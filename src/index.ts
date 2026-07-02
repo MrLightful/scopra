@@ -30,6 +30,13 @@ export type {
   PolicyViolation,
   ToolEvaluationRequest,
 } from "./evaluation";
+export type { ScopraErrorCode, ScopraErrorContext, ScopraErrorOptions } from "./errors";
+export {
+  isScopraError,
+  PolicyEvaluationError,
+  ScopraError,
+  ViolationResponseError,
+} from "./errors";
 export type {
   ScopraModel,
   ScopraModelOptions,

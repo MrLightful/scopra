@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   Policy,
+  PolicyEvaluationError,
   type PolicyEvaluator,
   type PolicyOptions,
   PolicyPipeline,
@@ -94,6 +95,63 @@ describe("PolicyPipeline", () => {
       ],
       violations: [],
       escalations: [],
+    });
+  });
+
+  test("wraps custom evaluator failures in a policy evaluation error", async () => {
+    const cause = new Error("provider timeout with prompt: sk_live_123");
+    const pipeline = new PolicyPipeline({
+      evaluator: () => {
+        throw cause;
+      },
+      policies: [noSecretsPolicy],
+    });
+
+    const error = await captureError(() =>
+      pipeline.evaluate({
+        type: "output",
+        content: "sk_live_123",
+      }),
+    );
+
+    expect(error).toBeInstanceOf(PolicyEvaluationError);
+    expect(error).toMatchObject({
+      code: "policy_evaluator_failed",
+      publicMessage: "The policy check could not be completed.",
+      context: {
+        requestType: "output",
+        policyIds: ["no-secrets"],
+        phase: "policy_evaluator",
+      },
+      cause,
+    });
+    expect(JSON.stringify((error as PolicyEvaluationError).context)).not.toContain("sk_live_123");
+  });
+
+  test("wraps model evaluator failures in a policy evaluation error", async () => {
+    const cause = new Error("model unavailable");
+    const model = createObjectModel(cause);
+    const pipeline = new PolicyPipeline({
+      evaluator: model,
+      policies: [noSecretsPolicy],
+    });
+
+    const error = await captureError(() =>
+      pipeline.evaluate({
+        type: "input",
+        content: "Hello",
+      }),
+    );
+
+    expect(error).toBeInstanceOf(PolicyEvaluationError);
+    expect(error).toMatchObject({
+      code: "policy_evaluator_failed",
+      context: {
+        requestType: "input",
+        policyIds: ["no-secrets"],
+        phase: "policy_evaluator",
+      },
+      cause,
     });
   });
 
@@ -925,6 +983,16 @@ type TestModel = ScopraModel & {
   readonly generateObjectCalls: ScopraObjectInput[];
 };
 
+async function captureError(operation: () => Promise<unknown>): Promise<unknown> {
+  try {
+    await operation();
+  } catch (error) {
+    return error;
+  }
+
+  throw new Error("Expected operation to throw.");
+}
+
 function createObjectModel(object: unknown): TestModel {
   const generateObjectCalls: ScopraObjectInput[] = [];
 
@@ -935,6 +1003,11 @@ function createObjectModel(object: unknown): TestModel {
     },
     async generateObject(input) {
       generateObjectCalls.push(input);
+
+      if (object instanceof Error) {
+        throw object;
+      }
+
       return object;
     },
   };

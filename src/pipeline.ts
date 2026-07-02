@@ -6,6 +6,7 @@ import type {
   PolicyFinding,
   PolicyViolation,
 } from "./evaluation";
+import { createEvaluationErrorContext, isScopraError, PolicyEvaluationError } from "./errors";
 import { isScopraModel } from "./model";
 import { createModelEvaluator, type ModelEvaluatorOptions } from "./model-evaluator";
 import { Policy, type PolicyEvaluatorConfig, type PolicyOptions } from "./policy";
@@ -175,10 +176,7 @@ export class PolicyPipeline {
     const batchFindings: PolicyFinding[] = [];
 
     for (const batch of batches) {
-      const findings = await batch.evaluator({
-        request,
-        policies: batch.policies,
-      });
+      const findings = await this.evaluateBatch(request, batch.evaluator, batch.policies);
 
       batchFindings.push(...findings);
     }
@@ -204,6 +202,29 @@ export class PolicyPipeline {
     this.evaluatorOverrides.set(evaluator, policyEvaluator);
 
     return policyEvaluator;
+  }
+
+  private async evaluateBatch(
+    request: EvaluationRequest,
+    evaluator: PolicyEvaluator,
+    policies: readonly Policy[],
+  ): Promise<readonly PolicyFinding[]> {
+    try {
+      return await evaluator({
+        request,
+        policies,
+      });
+    } catch (error) {
+      if (isScopraError(error)) {
+        throw error;
+      }
+
+      throw new PolicyEvaluationError("Policy evaluator failed while evaluating policies.", {
+        code: "policy_evaluator_failed",
+        cause: error,
+        context: createEvaluationErrorContext(request, policies, "policy_evaluator"),
+      });
+    }
   }
 
   private meetsConfidenceThreshold(finding: PolicyFinding, threshold: number | undefined): boolean {
