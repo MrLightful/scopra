@@ -1,11 +1,15 @@
 ![Cover](./assets/cover.png)
 
+<div align="center">
+
 [![NPM Version](https://img.shields.io/npm/v/scopra)](https://www.npmjs.com/package/scopra)
 [![NPM Downloads](https://img.shields.io/npm/dm/scopra)](https://www.npmjs.com/package/scopra)
 [![NPM License](https://img.shields.io/npm/l/scopra)](https://www.npmjs.com/package/scopra)
 [![CI Status](https://img.shields.io/github/actions/workflow/status/MrLightful/scopra/ci.yml?label=CI)](https://github.com/MrLightful/scopra/actions/workflows/ci.yml)
 
 Documentation: https://scopra.mrlightful.com
+
+</div>
 
 ## About
 
