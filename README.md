@@ -12,7 +12,7 @@ Documentation: https://scopra.mrlightful.com
 Business-rule safeguards for AI agents.
 
 Scopra is a TypeScript SDK that runs alongside your main AI agent pipeline,
-evaluating user input, model output, and tool calls against your business rules
+evaluating user input and model output against your business rules
 before your app continues, blocks, or routes the request for review.
 
 ## Install

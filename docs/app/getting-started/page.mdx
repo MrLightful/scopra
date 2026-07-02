@@ -72,21 +72,6 @@ const decision = await pipeline.evaluate({
 });
 ```
 
-## Evaluate Tool Calls
-
-Use tool evaluation before an agent executes side-effectful actions.
-
-```ts
-const decision = await pipeline.evaluate({
-  type: "tool",
-  name: "issueRefund",
-  arguments: {
-    invoiceId: "inv_123",
-    amount: 2400,
-  },
-});
-```
-
 ## Handle Decisions
 
 Allowed decisions have no blocking violations. Denied decisions contain violations with the policy, evaluator finding, and denial.
