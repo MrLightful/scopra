@@ -7,6 +7,7 @@ import {
   type PolicyOptions,
   type ScopraModel,
   type ScopraTextInput,
+  ViolationResponseError,
 } from "./index";
 
 const noSecretsPolicy: PolicyOptions = {
@@ -203,6 +204,28 @@ describe("generateViolationResponse", () => {
       expect(response).toBe("I cannot help with that request.");
     }
   });
+
+  test("wraps response model failures in a violation response error", async () => {
+    const cause = new Error("response model failed after seeing sk_live_123");
+    const model = createFailingTextModel(cause);
+
+    const error = await captureError(() =>
+      generateViolationResponse(model, createDeniedDecision()),
+    );
+
+    expect(error).toBeInstanceOf(ViolationResponseError);
+    expect(error).toMatchObject({
+      code: "violation_response_failed",
+      publicMessage: "A policy denial response could not be generated.",
+      context: {
+        requestType: "output",
+        policyIds: ["no-secrets"],
+        phase: "violation_response",
+      },
+      cause,
+    });
+    expect(JSON.stringify((error as ViolationResponseError).context)).not.toContain("sk_live_123");
+  });
 });
 
 function createDeniedDecision(overrides: Partial<DeniedPolicyDecision> = {}): DeniedPolicyDecision {
@@ -256,4 +279,29 @@ function createTextModel(text: string): TestTextModel {
       throw new Error("Unexpected generateObject call.");
     },
   };
+}
+
+function createFailingTextModel(error: Error): TestTextModel {
+  const generateTextCalls: ScopraTextInput[] = [];
+
+  return {
+    generateTextCalls,
+    async generateText(input) {
+      generateTextCalls.push(input);
+      throw error;
+    },
+    async generateObject() {
+      throw new Error("Unexpected generateObject call.");
+    },
+  };
+}
+
+async function captureError(operation: () => Promise<unknown>): Promise<unknown> {
+  try {
+    await operation();
+  } catch (error) {
+    return error;
+  }
+
+  throw new Error("Expected operation to throw.");
 }

@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { createEvaluationErrorContext, PolicyEvaluationError } from "./errors";
 import type { EvaluationRequest, PolicyEvaluator, PolicyFinding } from "./evaluation";
 import type { ScopraModel, ScopraModelOptions } from "./model";
 import type { Policy } from "./policy";
@@ -63,12 +64,28 @@ async function evaluateWithModel(
     abortSignal: options.abortSignal,
     modelOptions: options.modelOptions,
   });
-  const evaluation = evaluationSchema.parse(result);
+  const evaluation = parseEvaluationResult(result, request, policies);
   const findings = evaluation.findings.map(toPolicyFinding);
 
-  assertFindingsMatchPolicies(findings, policies);
+  assertFindingsMatchPolicies(findings, request, policies);
 
   return findings;
+}
+
+function parseEvaluationResult(
+  result: unknown,
+  request: EvaluationRequest,
+  policies: readonly Policy[],
+): z.infer<typeof evaluationSchema> {
+  try {
+    return evaluationSchema.parse(result);
+  } catch (error) {
+    throw new PolicyEvaluationError("Model evaluator returned invalid policy findings.", {
+      code: "policy_findings_invalid",
+      cause: error,
+      context: createEvaluationErrorContext(request, policies, "model_evaluator_validation"),
+    });
+  }
 }
 
 function buildPrompt(request: EvaluationRequest, policies: readonly Policy[]): string {
@@ -103,6 +120,7 @@ function toPolicyFinding(finding: z.infer<typeof findingSchema>): PolicyFinding 
 
 function assertFindingsMatchPolicies(
   findings: readonly PolicyFinding[],
+  request: EvaluationRequest,
   policies: readonly Policy[],
 ): void {
   const expectedIds = new Set(policies.map((policy) => policy.id));
@@ -110,12 +128,19 @@ function assertFindingsMatchPolicies(
 
   for (const finding of findings) {
     if (!expectedIds.has(finding.policyId)) {
-      throw new Error(`Model evaluator returned an unknown policy id: ${finding.policyId}`);
+      throw new PolicyEvaluationError("Model evaluator returned an unknown policy id.", {
+        code: "policy_findings_invalid",
+        context: createEvaluationErrorContext(request, policies, "model_evaluator_validation"),
+      });
     }
 
     if (seenIds.has(finding.policyId)) {
-      throw new Error(
+      throw new PolicyEvaluationError(
         `Model evaluator returned duplicate findings for policy id: ${finding.policyId}`,
+        {
+          code: "policy_findings_invalid",
+          context: createEvaluationErrorContext(request, policies, "model_evaluator_validation"),
+        },
       );
     }
 
@@ -127,6 +152,12 @@ function assertFindingsMatchPolicies(
     .filter((policyId) => !seenIds.has(policyId));
 
   if (missingIds.length > 0) {
-    throw new Error(`Model evaluator omitted findings for policy ids: ${missingIds.join(", ")}`);
+    throw new PolicyEvaluationError(
+      `Model evaluator omitted findings for policy ids: ${missingIds.join(", ")}`,
+      {
+        code: "policy_findings_invalid",
+        context: createEvaluationErrorContext(request, policies, "model_evaluator_validation"),
+      },
+    );
   }
 }

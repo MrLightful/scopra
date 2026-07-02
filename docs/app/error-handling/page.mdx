@@ -1,0 +1,88 @@
+# Error Handling
+
+Scopra is strict by default. If policy evaluation cannot complete, `PolicyPipeline.evaluate(...)` rejects instead of silently allowing or denying the request.
+
+Use typed Scopra errors to separate evaluator failures from ordinary application errors.
+
+```ts
+import { isScopraError, PolicyPipeline } from "scopra";
+
+try {
+  const decision = await pipeline.evaluate({
+    type: "input",
+    content: userMessage,
+  });
+
+  if (!decision.allowed) {
+    return decision.violations[0]?.denial ?? "This request needs review.";
+  }
+
+  return continueWorkflow();
+} catch (error) {
+  if (isScopraError(error)) {
+    logger.warn("Scopra check failed", {
+      code: error.code,
+      context: error.context,
+      cause: error.cause,
+    });
+
+    return "This request needs review before we can continue.";
+  }
+
+  throw error;
+}
+```
+
+## Error Types
+
+| Error | Code | When it happens |
+| --- | --- | --- |
+| `PolicyEvaluationError` | `policy_evaluator_failed` | A custom evaluator, model adapter, or provider request fails. |
+| `PolicyEvaluationError` | `policy_findings_invalid` | A model evaluator returns malformed, duplicate, unknown, or missing policy findings. |
+| `ViolationResponseError` | `violation_response_failed` | `generateViolationResponse(...)` cannot generate user-facing denial copy. |
+
+All Scopra errors include:
+
+```ts
+type ScopraError = {
+  name: string;
+  code: ScopraErrorCode;
+  message: string;
+  cause: unknown;
+  context: {
+    requestType?: "input" | "output" | "tool";
+    policyIds?: readonly string[];
+    phase?: string;
+  };
+  publicMessage: string;
+};
+```
+
+## Safe Logging
+
+`error.context` is safe to log by default. It includes the request type, policy ids, and Scopra phase, but not raw user input, model output, or tool arguments.
+
+The original provider or evaluator failure is kept in `error.cause`. Treat `cause` as sensitive because third-party SDK errors may include request details.
+
+## Response Generation Failures
+
+`generateViolationResponse(...)` runs after a policy decision has already denied a request. If response generation fails, show a generic fallback denial instead of retrying the policy check.
+
+```ts
+import { generateViolationResponse, isScopraError } from "scopra";
+
+try {
+  return await generateViolationResponse(model, deniedDecision);
+} catch (error) {
+  if (isScopraError(error)) {
+    logger.warn("Could not generate denial copy", {
+      code: error.code,
+      context: error.context,
+    });
+
+    return deniedDecision.violations[0]?.denial ?? error.publicMessage;
+  }
+
+  throw error;
+}
+```

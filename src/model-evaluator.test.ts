@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { z } from "zod";
 import {
   Policy,
+  PolicyEvaluationError,
   type PolicyOptions,
   PolicyPipeline,
   type ScopraModel,
@@ -273,12 +274,23 @@ describe("model-backed policy evaluation", () => {
       policies: [new Policy(noSecretsPolicy)],
     });
 
-    await expect(
+    const error = await captureError(() =>
       pipeline.evaluate({
         type: "input",
         content: "Hello",
       }),
-    ).rejects.toThrow("unknown policy id");
+    );
+
+    expect(error).toBeInstanceOf(PolicyEvaluationError);
+    expect(error).toMatchObject({
+      code: "policy_findings_invalid",
+      context: {
+        requestType: "input",
+        policyIds: ["no-secrets"],
+        phase: "model_evaluator_validation",
+      },
+    });
+    expect((error as PolicyEvaluationError).message).toContain("unknown policy id");
   });
 
   test("rejects duplicate model findings for a configured policy", async () => {
@@ -304,12 +316,23 @@ describe("model-backed policy evaluation", () => {
       policies: [new Policy(noSecretsPolicy)],
     });
 
-    await expect(
+    const error = await captureError(() =>
       pipeline.evaluate({
         type: "input",
         content: "Hello",
       }),
-    ).rejects.toThrow("duplicate findings");
+    );
+
+    expect(error).toBeInstanceOf(PolicyEvaluationError);
+    expect(error).toMatchObject({
+      code: "policy_findings_invalid",
+      context: {
+        requestType: "input",
+        policyIds: ["no-secrets"],
+        phase: "model_evaluator_validation",
+      },
+    });
+    expect((error as PolicyEvaluationError).message).toContain("duplicate findings");
   });
 
   test("rejects model responses that omit configured policies", async () => {
@@ -328,12 +351,23 @@ describe("model-backed policy evaluation", () => {
       policies: [new Policy(noSecretsPolicy), new Policy(stayInScopePolicy)],
     });
 
-    await expect(
+    const error = await captureError(() =>
       pipeline.evaluate({
         type: "input",
         content: "Hello",
       }),
-    ).rejects.toThrow("omitted findings");
+    );
+
+    expect(error).toBeInstanceOf(PolicyEvaluationError);
+    expect(error).toMatchObject({
+      code: "policy_findings_invalid",
+      context: {
+        requestType: "input",
+        policyIds: ["no-secrets", "stay-in-scope"],
+        phase: "model_evaluator_validation",
+      },
+    });
+    expect((error as PolicyEvaluationError).message).toContain("omitted findings");
   });
 });
 
@@ -354,4 +388,14 @@ function createObjectModel(object: unknown): TestModel {
       return object;
     },
   };
+}
+
+async function captureError(operation: () => Promise<unknown>): Promise<unknown> {
+  try {
+    await operation();
+  } catch (error) {
+    return error;
+  }
+
+  throw new Error("Expected operation to throw.");
 }

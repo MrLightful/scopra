@@ -7,6 +7,7 @@ export default {
   "built-in-policies": "Built-In Policies",
   adapters: "Adapters",
   "generate-violation-response": "Violation Responses",
+  "error-handling": "Error Handling",
   "api-reference": "API Reference",
   changelog: "Changelog",
 };
