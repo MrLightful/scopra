@@ -2,4 +2,4 @@
 "scopra": patch
 ---
 
-Add light-theme cover assets for the README and docs.
+Refresh the cover image design and add theme-aware variants for the README and docs.
