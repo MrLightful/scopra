@@ -5,6 +5,14 @@ const withNextra = nextra({
 });
 
 export default withNextra({
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "www.gravatar.com",
+      },
+    ],
+  },
   reactStrictMode: true,
   turbopack: {
     root: import.meta.dirname,
