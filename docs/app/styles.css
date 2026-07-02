@@ -2,6 +2,45 @@
   --scopra-accent: #0f766e;
 }
 
+.scopra-navbar-npm {
+  align-items: center;
+  border-radius: 6px;
+  color: inherit;
+  display: inline-flex;
+  height: 1.5rem;
+  justify-content: center;
+  line-height: 1;
+  width: 1.5rem;
+  text-decoration: none;
+}
+
+.scopra-navbar-npm svg {
+  fill: currentColor;
+  height: 1.5rem;
+  width: 1.5rem;
+}
+
+.scopra-navbar-npm:hover {
+  opacity: 0.75;
+}
+
+.scopra-badges {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0.75rem 0 1.25rem;
+}
+
+.scopra-badges a {
+  display: inline-flex;
+}
+
+.scopra-badges img {
+  display: block;
+  height: 20px;
+}
+
 .scopra-footer-attribution,
 .scopra-footer-attribution a {
   align-items: center;
