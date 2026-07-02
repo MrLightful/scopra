@@ -43,7 +43,6 @@ describe("generateViolationResponse", () => {
 
     const prompt = model.generateTextCalls[0]?.prompt;
 
-    expect(prompt).toContain('"type": "output"');
     expect(prompt).toContain('"content": "sk_live_123"');
     expect(prompt).toContain('"denial": "Do not share secrets."');
     expect(prompt).toContain('"id": "no-secrets"');
@@ -87,7 +86,6 @@ describe("generateViolationResponse", () => {
       model,
       createDeniedDecision({
         request: {
-          type: "output",
           content: "Her er nøkkelen: sk_live_123. تماس بعداً.",
         },
         violations: [
@@ -219,7 +217,6 @@ describe("generateViolationResponse", () => {
       code: "violation_response_failed",
       publicMessage: "A policy denial response could not be generated.",
       context: {
-        requestType: "output",
         policyIds: ["no-secrets"],
         phase: "violation_response",
       },
@@ -232,7 +229,6 @@ describe("generateViolationResponse", () => {
     const cause = new PolicyEvaluationError("Nested policy evaluation failed.", {
       code: "policy_evaluator_failed",
       context: {
-        requestType: "input",
         policyIds: ["agent-scope"],
         phase: "policy_evaluator",
       },
@@ -251,7 +247,6 @@ function createDeniedDecision(overrides: Partial<DeniedPolicyDecision> = {}): De
   return {
     allowed: false,
     request: {
-      type: "output",
       content: "sk_live_123",
     },
     findings: [

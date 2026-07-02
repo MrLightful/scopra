@@ -222,7 +222,7 @@ export class PolicyPipeline {
       throw new PolicyEvaluationError("Policy evaluator failed while evaluating policies.", {
         code: "policy_evaluator_failed",
         cause: error,
-        context: createEvaluationErrorContext(request, policies, "policy_evaluator"),
+        context: createEvaluationErrorContext(policies, "policy_evaluator"),
       });
     }
   }

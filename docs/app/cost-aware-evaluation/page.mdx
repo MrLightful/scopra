@@ -14,7 +14,7 @@ A smaller evaluator can still be effective when the policy is specific, the requ
 
 You do not need to evaluate every request. Run Scopra where the agent is about to cross a meaningful boundary.
 
-Good evaluation points include first messages in a session, commercially sensitive requests, account changes, refunds, data access, permission changes, and any tool call with external side effects. Routine clarifying questions, low-risk informational replies, and repeated safe turns may not need the same level of review.
+Good evaluation points include first messages in a session, commercially sensitive requests, account changes, refunds, data access, permission changes, and text that may lead to sensitive external actions. Routine clarifying questions, low-risk informational replies, and repeated safe turns may not need the same level of review.
 
 The goal is not maximum coverage at any cost. The goal is to spend evaluation budget where a wrong action would matter.
 
@@ -44,11 +44,11 @@ This keeps common safe traffic cheap while giving uncertain or high-impact cases
 
 ## Choose The Right Surface
 
-Scopra can evaluate user input, model output, and tool calls. Cost-aware systems choose the surface that matches the risk.
+Scopra can evaluate user input and model output. Cost-aware systems choose the text surface that matches the risk.
 
-Input evaluation is useful before the agent starts a sensitive workflow. Output evaluation is useful before returning promises, advice, protected content, or sensitive data. Tool evaluation is useful before side-effectful actions such as refunds, deletions, permission changes, account access, and external writes.
+Input evaluation is useful before the agent starts a sensitive workflow or acts on a request that could lead to refunds, deletions, permission changes, account access, or external writes. Output evaluation is useful before returning promises, advice, protected content, or sensitive data.
 
-Many applications use a mix of all three, but not always at the same frequency. The right evaluation plan depends on where your agent can cause harm, leak information, or create commitments.
+Many applications use a mix of input and output checks, but not always at the same frequency. The right evaluation plan depends on where your agent can cause harm, leak information, or create commitments.
 
 ## Practical Default
 

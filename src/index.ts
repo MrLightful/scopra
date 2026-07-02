@@ -19,8 +19,6 @@ export type {
   AllowedPolicyDecision,
   DeniedPolicyDecision,
   EvaluationRequest,
-  InputEvaluationRequest,
-  OutputEvaluationRequest,
   PolicyDecision,
   PolicyEscalation,
   PolicyEvaluator,
@@ -28,7 +26,6 @@ export type {
   PolicyFinding,
   PolicySeverity,
   PolicyViolation,
-  ToolEvaluationRequest,
 } from "./evaluation";
 export type { ScopraErrorCode, ScopraErrorContext, ScopraErrorOptions } from "./errors";
 export {

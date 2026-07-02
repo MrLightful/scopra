@@ -7,7 +7,6 @@ describe("Scopra errors", () => {
       code: "policy_evaluator_failed",
       cause: new Error("network timeout"),
       context: {
-        requestType: "input",
         policyIds: ["agent-scope"],
         phase: "policy_evaluator",
       },

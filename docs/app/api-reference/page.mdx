@@ -51,10 +51,9 @@ const decision = await pipeline.evaluate(request);
 ## Evaluation Requests
 
 ```ts
-type EvaluationRequest =
-  | { type: "input"; content: string }
-  | { type: "output"; content: string }
-  | { type: "tool"; name: string; arguments: Record<string, unknown> };
+type EvaluationRequest = {
+  content: string;
+};
 ```
 
 ## Decisions

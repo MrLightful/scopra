@@ -70,7 +70,7 @@ const evaluator: PolicyEvaluator = async ({ request, policies }) => {
   return policies.map((policy) => ({
     policyId: policy.id,
     passed: true,
-    reason: `Checked ${request.type}.`,
+    reason: `Checked ${request.content.length} characters.`,
     confidence: 1,
   }));
 };

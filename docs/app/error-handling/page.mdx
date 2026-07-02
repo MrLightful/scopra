@@ -14,7 +14,6 @@ const pipeline = new PolicyPipeline({
 
 try {
   const decision = await pipeline.evaluate({
-    type: "input",
     content: userMessage,
   });
 
@@ -55,7 +54,6 @@ type ScopraError = {
   message: string;
   cause: unknown;
   context: {
-    requestType?: "input" | "output" | "tool";
     policyIds?: readonly string[];
     phase?: string;
   };
@@ -65,7 +63,7 @@ type ScopraError = {
 
 ## Safe Logging
 
-`error.context` is safe to log by default. It includes the request type, policy ids, and Scopra phase, but not raw user input, model output, or tool arguments.
+`error.context` is safe to log by default. It includes policy ids and the Scopra phase, but not raw evaluated content.
 
 The original provider or evaluator failure is kept in `error.cause`. Treat `cause` as sensitive because third-party SDK errors may include request details.
 
