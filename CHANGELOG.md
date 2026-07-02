@@ -1,5 +1,13 @@
 # scopra
 
+## 0.0.5
+
+### Patch Changes
+
+- 14cb268: Update the package and docs one-liner.
+- 225a700: Simplify evaluation requests to text content only.
+- 2732be4: Add typed production errors.
+
 ## 0.0.4
 
 ### Patch Changes
