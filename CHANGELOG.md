@@ -1,5 +1,12 @@
 # scopra
 
+## 1.0.1
+
+### Patch Changes
+
+- 381d6b3: Refresh the cover and concept image designs, and add theme-aware cover variants for the README and docs.
+- bb51c71: Add `ToxicLanguagePolicy` as a built-in policy preset.
+
 ## 1.0.0
 
 ### Major Changes
