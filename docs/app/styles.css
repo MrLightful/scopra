@@ -24,10 +24,23 @@
   margin: 1rem 0 2rem;
 }
 
-.scopra-hero img,
+.scopra-hero-image,
 .scopra-concept img {
   border: 1px solid color-mix(in srgb, currentColor 14%, transparent);
   border-radius: 8px;
+}
+
+.scopra-hero-image {
+  display: block;
+}
+
+.scopra-hero-image-dark,
+.dark .scopra-hero-image-light {
+  display: none;
+}
+
+.dark .scopra-hero-image-dark {
+  display: block;
 }
 
 .scopra-grid {

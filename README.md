@@ -1,4 +1,5 @@
-![Cover](./assets/cover.png)
+![Cover](./assets/cover-light.png#gh-light-mode-only)
+![Cover](./assets/cover.png#gh-dark-mode-only)
 
 <div align="center">
 
