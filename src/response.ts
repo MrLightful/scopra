@@ -1,5 +1,5 @@
 import type { DeniedPolicyDecision } from "./evaluation";
-import { createEvaluationErrorContext, ViolationResponseError } from "./errors";
+import { createEvaluationErrorContext, isScopraError, ViolationResponseError } from "./errors";
 import type { ScopraModel, ScopraModelOptions } from "./model";
 
 const DEFAULT_SYSTEM = [
@@ -48,6 +48,10 @@ export async function generateViolationResponse(
       modelOptions,
     });
   } catch (error) {
+    if (isScopraError(error)) {
+      throw error;
+    }
+
     throw new ViolationResponseError("Violation response generation failed.", {
       cause: error,
       context: createEvaluationErrorContext(

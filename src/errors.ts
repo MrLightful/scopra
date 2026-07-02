@@ -37,7 +37,7 @@ export type ScopraErrorOptions = {
  */
 export class ScopraError extends Error {
   readonly code: ScopraErrorCode;
-  override readonly cause: unknown;
+  override cause: unknown;
   readonly context: ScopraErrorContext;
   readonly publicMessage: string;
 

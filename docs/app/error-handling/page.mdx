@@ -7,6 +7,11 @@ Use typed Scopra errors to separate evaluator failures from ordinary application
 ```ts
 import { isScopraError, PolicyPipeline } from "scopra";
 
+const pipeline = new PolicyPipeline({
+  evaluator,
+  policies,
+});
+
 try {
   const decision = await pipeline.evaluate({
     type: "input",

@@ -3,6 +3,7 @@ import {
   type DeniedPolicyDecision,
   generateViolationResponse,
   Policy,
+  PolicyEvaluationError,
   type PolicyDecision,
   type PolicyOptions,
   type ScopraModel,
@@ -225,6 +226,24 @@ describe("generateViolationResponse", () => {
       cause,
     });
     expect(JSON.stringify((error as ViolationResponseError).context)).not.toContain("sk_live_123");
+  });
+
+  test("rethrows typed Scopra errors from response models unchanged", async () => {
+    const cause = new PolicyEvaluationError("Nested policy evaluation failed.", {
+      code: "policy_evaluator_failed",
+      context: {
+        requestType: "input",
+        policyIds: ["agent-scope"],
+        phase: "policy_evaluator",
+      },
+    });
+    const model = createFailingTextModel(cause);
+
+    const error = await captureError(() =>
+      generateViolationResponse(model, createDeniedDecision()),
+    );
+
+    expect(error).toBe(cause);
   });
 });
 
