@@ -2,4 +2,4 @@
 "scopra": patch
 ---
 
-Refresh the cover image design and add theme-aware variants for the README and docs.
+Refresh the cover and concept image designs, and add theme-aware cover variants for the README and docs.
