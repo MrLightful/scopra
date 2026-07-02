@@ -55,7 +55,6 @@ export async function generateViolationResponse(
     throw new ViolationResponseError("Violation response generation failed.", {
       cause: error,
       context: createEvaluationErrorContext(
-        decision.request,
         decision.violations.map((violation) => violation.policy),
         "violation_response",
       ),

@@ -1,44 +1,12 @@
 import type { Policy, PolicyEscalationConfig } from "./policy";
 
 /**
- * Request to evaluate user-provided input before the workflow continues.
+ * Text content accepted by policy evaluators and policy pipelines.
  */
-export type InputEvaluationRequest = {
-  /** Identifies the request as user input. */
-  readonly type: "input";
-  /** Input content to evaluate. */
+export type EvaluationRequest = {
+  /** Text content to evaluate. */
   readonly content: string;
 };
-
-/**
- * Request to evaluate model output before it is returned or used.
- */
-export type OutputEvaluationRequest = {
-  /** Identifies the request as model output. */
-  readonly type: "output";
-  /** Output content to evaluate. */
-  readonly content: string;
-};
-
-/**
- * Request to evaluate a tool invocation before it is executed.
- */
-export type ToolEvaluationRequest = {
-  /** Identifies the request as a tool invocation. */
-  readonly type: "tool";
-  /** Tool name to evaluate. */
-  readonly name: string;
-  /** Tool arguments to evaluate. */
-  readonly arguments: Record<string, unknown>;
-};
-
-/**
- * Request shape accepted by policy evaluators and policy pipelines.
- */
-export type EvaluationRequest =
-  | InputEvaluationRequest
-  | OutputEvaluationRequest
-  | ToolEvaluationRequest;
 
 /**
  * Report-only seriousness level for a policy finding.

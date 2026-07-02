@@ -43,7 +43,6 @@ describe("model-backed policy evaluation", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "output",
       content: "sk_live_123",
     });
 
@@ -59,7 +58,7 @@ describe("model-backed policy evaluation", () => {
     expect(decision.violations[0]?.finding.severity).toBe("critical");
   });
 
-  test("includes input, output, and tool requests in the model prompt", async () => {
+  test("includes text requests in the model prompt", async () => {
     const model = createObjectModel({
       findings: [
         {
@@ -77,30 +76,16 @@ describe("model-backed policy evaluation", () => {
     });
 
     await pipeline.evaluate({
-      type: "input",
       content: "Can you write a test?",
     });
     await pipeline.evaluate({
-      type: "output",
       content: "Here is a safe summary.",
-    });
-    await pipeline.evaluate({
-      type: "tool",
-      name: "sendEmail",
-      arguments: {
-        to: "security@example.com",
-      },
     });
 
     const prompts = model.generateObjectCalls.map((call) => call.prompt);
 
-    expect(prompts[0]).toContain('"type": "input"');
     expect(prompts[0]).toContain('"content": "Can you write a test?"');
-    expect(prompts[1]).toContain('"type": "output"');
     expect(prompts[1]).toContain('"content": "Here is a safe summary."');
-    expect(prompts[2]).toContain('"type": "tool"');
-    expect(prompts[2]).toContain('"name": "sendEmail"');
-    expect(prompts[2]).toContain('"to": "security@example.com"');
   });
 
   test("uses custom system instructions and forwards model options", async () => {
@@ -125,7 +110,6 @@ describe("model-backed policy evaluation", () => {
     });
 
     await pipeline.evaluate({
-      type: "input",
       content: "Hello",
     });
 
@@ -160,7 +144,6 @@ describe("model-backed policy evaluation", () => {
     });
 
     await pipeline.evaluate({
-      type: "input",
       content: "This is safe: sk_live_123",
     });
 
@@ -198,7 +181,6 @@ describe("model-backed policy evaluation", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "input",
       content: "Hello",
     });
 
@@ -228,7 +210,6 @@ describe("model-backed policy evaluation", () => {
     });
 
     await pipeline.evaluate({
-      type: "input",
       content: "Hello",
     });
 
@@ -276,7 +257,6 @@ describe("model-backed policy evaluation", () => {
 
     const error = await captureError(() =>
       pipeline.evaluate({
-        type: "input",
         content: "Hello",
       }),
     );
@@ -285,7 +265,6 @@ describe("model-backed policy evaluation", () => {
     expect(error).toMatchObject({
       code: "policy_findings_invalid",
       context: {
-        requestType: "input",
         policyIds: ["no-secrets"],
         phase: "model_evaluator_validation",
       },
@@ -318,7 +297,6 @@ describe("model-backed policy evaluation", () => {
 
     const error = await captureError(() =>
       pipeline.evaluate({
-        type: "input",
         content: "Hello",
       }),
     );
@@ -327,7 +305,6 @@ describe("model-backed policy evaluation", () => {
     expect(error).toMatchObject({
       code: "policy_findings_invalid",
       context: {
-        requestType: "input",
         policyIds: ["no-secrets"],
         phase: "model_evaluator_validation",
       },
@@ -353,7 +330,6 @@ describe("model-backed policy evaluation", () => {
 
     const error = await captureError(() =>
       pipeline.evaluate({
-        type: "input",
         content: "Hello",
       }),
     );
@@ -362,7 +338,6 @@ describe("model-backed policy evaluation", () => {
     expect(error).toMatchObject({
       code: "policy_findings_invalid",
       context: {
-        requestType: "input",
         policyIds: ["no-secrets", "stay-in-scope"],
         phase: "model_evaluator_validation",
       },

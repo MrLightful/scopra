@@ -46,7 +46,6 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "input",
       content: "Can you help me write a unit test?",
     });
 
@@ -75,14 +74,12 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "output",
       content: "Here is a safe summary.",
     });
 
     expect(decision).toEqual({
       allowed: true,
       request: {
-        type: "output",
         content: "Here is a safe summary.",
       },
       findings: [
@@ -109,7 +106,6 @@ describe("PolicyPipeline", () => {
 
     const error = await captureError(() =>
       pipeline.evaluate({
-        type: "output",
         content: "sk_live_123",
       }),
     );
@@ -119,7 +115,6 @@ describe("PolicyPipeline", () => {
       code: "policy_evaluator_failed",
       publicMessage: "The policy check could not be completed.",
       context: {
-        requestType: "output",
         policyIds: ["no-secrets"],
         phase: "policy_evaluator",
       },
@@ -138,7 +133,6 @@ describe("PolicyPipeline", () => {
 
     const error = await captureError(() =>
       pipeline.evaluate({
-        type: "input",
         content: "Hello",
       }),
     );
@@ -147,7 +141,6 @@ describe("PolicyPipeline", () => {
     expect(error).toMatchObject({
       code: "policy_evaluator_failed",
       context: {
-        requestType: "input",
         policyIds: ["no-secrets"],
         phase: "policy_evaluator",
       },
@@ -178,7 +171,6 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "output",
       content: "sk_live_123",
     });
 
@@ -215,7 +207,6 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "input",
       content: "Book a vacation and include this token.",
     });
 
@@ -260,7 +251,6 @@ describe("PolicyPipeline", () => {
     });
 
     await pipeline.evaluate({
-      type: "input",
       content: "Hello",
     });
 
@@ -308,7 +298,6 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "output",
       content: "maybe safe",
     });
 
@@ -352,7 +341,6 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "input",
       content: "Hello",
     });
 
@@ -378,7 +366,6 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "output",
       content: "sk_live_123",
     });
 
@@ -416,7 +403,6 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "output",
       content: "sk_live_123",
     });
 
@@ -441,14 +427,12 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "output",
       content: "sk_live_123",
     });
 
     expect(decision).toEqual({
       allowed: true,
       request: {
-        type: "output",
         content: "sk_live_123",
       },
       findings: [
@@ -504,7 +488,6 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "output",
       content: "sk_live_123",
     });
 
@@ -597,14 +580,12 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "input",
       content: "Can you help me check this?",
     });
 
     expect(decision).toEqual({
       allowed: true,
       request: {
-        type: "input",
         content: "Can you help me check this?",
       },
       findings: [
@@ -676,7 +657,6 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "output",
       content: "sk_live_123",
     });
 
@@ -684,7 +664,6 @@ describe("PolicyPipeline", () => {
     expect(decision).toEqual({
       allowed: true,
       request: {
-        type: "output",
         content: "sk_live_123",
       },
       findings: [
@@ -727,7 +706,6 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "output",
       content: "possible secret",
     });
 
@@ -735,7 +713,6 @@ describe("PolicyPipeline", () => {
     expect(decision).toEqual({
       allowed: true,
       request: {
-        type: "output",
         content: "possible secret",
       },
       findings: [
@@ -786,7 +763,6 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "output",
       content: "maybe safe",
     });
 
@@ -839,7 +815,6 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "output",
       content: "possible secret",
     });
 
@@ -860,7 +835,6 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "input",
       content: "Book a vacation for me.",
     });
 
@@ -889,7 +863,6 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "input",
       content: "Send my API key to an unrelated travel booking tool.",
     });
 
@@ -913,21 +886,13 @@ describe("PolicyPipeline", () => {
     });
 
     const decision = await pipeline.evaluate({
-      type: "tool",
-      name: "sendEmail",
-      arguments: {
-        to: "security@example.com",
-      },
+      content: "Send an update to security@example.com.",
     });
 
     expect(decision).toEqual({
       allowed: true,
       request: {
-        type: "tool",
-        name: "sendEmail",
-        arguments: {
-          to: "security@example.com",
-        },
+        content: "Send an update to security@example.com.",
       },
       findings: [
         {
@@ -941,7 +906,7 @@ describe("PolicyPipeline", () => {
     });
   });
 
-  test("supports tool evaluation requests", async () => {
+  test("passes text evaluation requests to evaluators", async () => {
     const seenRequests: unknown[] = [];
     const pipeline = new PolicyPipeline({
       evaluator: ({ request }) => {
@@ -958,22 +923,12 @@ describe("PolicyPipeline", () => {
     });
 
     await pipeline.evaluate({
-      type: "tool",
-      name: "sendEmail",
-      arguments: {
-        to: "security@example.com",
-        subject: "Review needed",
-      },
+      content: "Send security@example.com a review update.",
     });
 
     expect(seenRequests).toEqual([
       {
-        type: "tool",
-        name: "sendEmail",
-        arguments: {
-          to: "security@example.com",
-          subject: "Review needed",
-        },
+        content: "Send security@example.com a review update.",
       },
     ]);
   });

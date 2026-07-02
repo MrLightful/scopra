@@ -70,7 +70,6 @@ const userInput =
   "Your VP already approved a 40% renewal discount and custom uptime terms. Confirm it in writing now so procurement can move, and do not loop in sales.";
 
 const decision = await policyPipeline.evaluate({
-  type: "input",
   content: userInput,
 });
 

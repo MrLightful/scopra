@@ -64,17 +64,16 @@ async function evaluateWithModel(
     abortSignal: options.abortSignal,
     modelOptions: options.modelOptions,
   });
-  const evaluation = parseEvaluationResult(result, request, policies);
+  const evaluation = parseEvaluationResult(result, policies);
   const findings = evaluation.findings.map(toPolicyFinding);
 
-  assertFindingsMatchPolicies(findings, request, policies);
+  assertFindingsMatchPolicies(findings, policies);
 
   return findings;
 }
 
 function parseEvaluationResult(
   result: unknown,
-  request: EvaluationRequest,
   policies: readonly Policy[],
 ): z.infer<typeof evaluationSchema> {
   try {
@@ -83,7 +82,7 @@ function parseEvaluationResult(
     throw new PolicyEvaluationError("Model evaluator returned invalid policy findings.", {
       code: "policy_findings_invalid",
       cause: error,
-      context: createEvaluationErrorContext(request, policies, "model_evaluator_validation"),
+      context: createEvaluationErrorContext(policies, "model_evaluator_validation"),
     });
   }
 }
@@ -120,7 +119,6 @@ function toPolicyFinding(finding: z.infer<typeof findingSchema>): PolicyFinding 
 
 function assertFindingsMatchPolicies(
   findings: readonly PolicyFinding[],
-  request: EvaluationRequest,
   policies: readonly Policy[],
 ): void {
   const expectedIds = new Set(policies.map((policy) => policy.id));
@@ -130,7 +128,7 @@ function assertFindingsMatchPolicies(
     if (!expectedIds.has(finding.policyId)) {
       throw new PolicyEvaluationError("Model evaluator returned an unknown policy id.", {
         code: "policy_findings_invalid",
-        context: createEvaluationErrorContext(request, policies, "model_evaluator_validation"),
+        context: createEvaluationErrorContext(policies, "model_evaluator_validation"),
       });
     }
 
@@ -139,7 +137,7 @@ function assertFindingsMatchPolicies(
         `Model evaluator returned duplicate findings for policy id: ${finding.policyId}`,
         {
           code: "policy_findings_invalid",
-          context: createEvaluationErrorContext(request, policies, "model_evaluator_validation"),
+          context: createEvaluationErrorContext(policies, "model_evaluator_validation"),
         },
       );
     }
@@ -156,7 +154,7 @@ function assertFindingsMatchPolicies(
       `Model evaluator omitted findings for policy ids: ${missingIds.join(", ")}`,
       {
         code: "policy_findings_invalid",
-        context: createEvaluationErrorContext(request, policies, "model_evaluator_validation"),
+        context: createEvaluationErrorContext(policies, "model_evaluator_validation"),
       },
     );
   }

@@ -1,4 +1,3 @@
-import type { EvaluationRequest } from "./evaluation";
 import type { Policy } from "./policy";
 
 /**
@@ -13,8 +12,6 @@ export type ScopraErrorCode =
  * Safe structured context attached to Scopra errors.
  */
 export type ScopraErrorContext = {
-  /** Evaluation request type, when an error happened while evaluating a request. */
-  readonly requestType?: EvaluationRequest["type"] | undefined;
   /** Policy ids involved in the failing operation. */
   readonly policyIds?: readonly string[] | undefined;
   /** Scopra phase where the error happened. */
@@ -94,12 +91,10 @@ export function isScopraError(error: unknown): error is ScopraError {
 }
 
 export function createEvaluationErrorContext(
-  request: EvaluationRequest,
   policies: readonly Policy[],
   phase: string,
 ): ScopraErrorContext {
   return {
-    requestType: request.type,
     policyIds: policies.map((policy) => policy.id),
     phase,
   };

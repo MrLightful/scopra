@@ -77,7 +77,6 @@ export async function POST(request: Request) {
     });
 
     const decision = await policyPipeline.evaluate({
-      type: "input",
       content: userMessage.content,
     });
     const policyMs = Math.round(performance.now() - policyStartedAt);
