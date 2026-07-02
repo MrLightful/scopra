@@ -2,6 +2,18 @@
   --scopra-accent: #0f766e;
 }
 
+.scopra-sr-only {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
 .scopra-navbar-npm {
   align-items: center;
   border-radius: 6px;
@@ -53,7 +65,7 @@
   width: 100%;
 }
 
-.scopra-footer-attribution img {
+.scopra-footer-avatar {
   border-radius: 999px;
 }
 
