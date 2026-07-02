@@ -13,6 +13,7 @@ export {
   PromptInjectionPolicy,
   RegulatedAdvicePolicy,
   SocialEngineeringPolicy,
+  ToxicLanguagePolicy,
   UnsafeToolUsePolicy,
 } from "./common-policies";
 export type {
