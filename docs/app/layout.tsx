@@ -9,7 +9,7 @@ export const metadata = {
     default: "Scopra Docs",
     template: "%s - Scopra",
   },
-  description: "Developer-first TypeScript policy enforcement for AI applications.",
+  description: "Business-rule safeguards for AI agents.",
 };
 
 const navbar = (
