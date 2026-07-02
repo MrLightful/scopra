@@ -1,5 +1,11 @@
 # scopra
 
+## 1.0.0
+
+### Major Changes
+
+- f8692b7: Stable release of Scopra v1.0.0.
+
 ## 0.0.5
 
 ### Patch Changes
